@@ -1,0 +1,726 @@
+<title>Healthcare Team Rescue Mission</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a ward "status board". Mission track across the top, the active challenge in the main panel,
+   a fixed scoreboard + timer rail on the right that stacks under the challenge on narrow screens. */
+:root {
+  --paper: #EBF1F2;
+  --surface: #FFFFFF;
+  --ink: #13263A;
+  --muted: #566977;
+  --line: #C7D3D8;
+  --accent: #0A7680;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #D7ECEE;
+  --green: #23804C; --green-bg: #DFF1E6;
+  --amber: #A66F00; --amber-bg: #FAEFD3;
+  --red: #B93424; --red-bg: #F7E0DC;
+  --key: #B88300;
+  --display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0C1820; --surface: #13222C; --ink: #E2ECEF; --muted: #93A7B1; --line: #263B49;
+    --accent: #4EC1C8; --accent-ink: #06272B; --accent-soft: #143A40;
+    --green: #5DC68A; --green-bg: #15322A; --amber: #E9B547; --amber-bg: #342913;
+    --red: #EF7966; --red-bg: #3A1D1A; --key: #E9B547; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0C1820; --surface: #13222C; --ink: #E2ECEF; --muted: #93A7B1; --line: #263B49;
+  --accent: #4EC1C8; --accent-ink: #06272B; --accent-soft: #143A40;
+  --green: #5DC68A; --green-bg: #15322A; --amber: #E9B547; --amber-bg: #342913;
+  --red: #EF7966; --red-bg: #3A1D1A; --key: #E9B547; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 40px;
+}
+h1, h2, h3 { font-family: var(--display); font-weight: 800; line-height: 1.02; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.label { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 16px; }
+
+/* Top bar */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; justify-content: space-between; }
+.brand { display: flex; align-items: baseline; gap: 12px; }
+.brand h1 { font-size: 30px; text-transform: uppercase; }
+.brand .label { white-space: nowrap; }
+.track { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.track button {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-family: var(--display);
+  font-weight: 800; font-size: 18px; letter-spacing: .06em; text-transform: uppercase;
+}
+.track button[aria-current="step"] { border-color: var(--accent); background: var(--accent-soft); }
+.track .arrow { color: var(--muted); align-self: center; font-family: var(--mono); font-size: 13px; }
+.keyicon { width: 20px; height: 20px; flex: none; }
+.keyicon path, .keyicon circle { fill: none; stroke: var(--line); stroke-width: 2.4; }
+.keyicon.got path, .keyicon.got circle { stroke: var(--key); }
+.keyicon.got circle { fill: var(--key); fill-opacity: .25; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+@media (max-width: 960px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+main { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(18px, 3vw, 36px); display: grid; gap: 24px; min-width: 0; }
+.stagehead { display: grid; gap: 6px; }
+.stagehead h2 { font-size: clamp(40px, 6vw, 68px); text-transform: uppercase; }
+.stagehead .lede { color: var(--muted); max-width: 64ch; }
+
+/* Buttons and chips */
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 700; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.small { padding: 4px 10px; font-size: 14px; border-radius: 8px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.row.spread { justify-content: space-between; }
+.toggle {
+  border: 1px solid var(--line); background: transparent; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-size: 15px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.toggle[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.toggle .pts { font-family: var(--mono); font-size: 12px; opacity: .8; }
+
+/* Triage chips */
+.tri { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-weight: 700; border: 2px solid currentColor; }
+.tri::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: currentColor; }
+.tri.green { color: var(--green); background: var(--green-bg); }
+.tri.amber { color: var(--amber); background: var(--amber-bg); }
+.tri.red { color: var(--red); background: var(--red-bg); }
+
+/* Case card */
+.case { border: 1px solid var(--line); border-radius: 12px; padding: clamp(18px, 3vw, 28px); display: grid; gap: 12px; background: var(--paper); }
+.case .who { font-family: var(--display); font-weight: 800; font-size: 30px; text-transform: uppercase; }
+.case .text { font-size: clamp(19px, 2vw, 24px); line-height: 1.5; max-width: 62ch; }
+.quote { font-size: clamp(24px, 3vw, 36px); line-height: 1.3; font-style: italic; max-width: 40ch; }
+
+.reveal { display: grid; gap: 16px; border-top: 2px dashed var(--line); padding-top: 20px; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.cols > div { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.cols ul { margin: 0; padding-left: 20px; }
+.hidden-note { color: var(--muted); font-style: italic; }
+
+/* Team scoring cards */
+.teams { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+.team { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 10px; align-content: start; }
+.team .tname { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+.team .tname .mono { font-family: var(--mono); color: var(--muted); font-weight: 400; }
+.team.correct { border-color: var(--green); }
+.team.miss { border-color: var(--line); opacity: .8; }
+
+.nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); padding-top: 18px; }
+
+/* Clue list */
+.clues { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.clue { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.clue .n { font-family: var(--display); font-weight: 800; font-size: 40px; line-height: 1; color: var(--accent); }
+.clue .t { font-weight: 700; font-size: 20px; }
+.clue.locked { border-style: dashed; color: var(--muted); }
+.clue.locked .n { color: var(--line); }
+.clue .body { display: grid; gap: 10px; min-width: 0; }
+.votes { display: grid; gap: 6px; }
+.vote { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.vote .who { min-width: 110px; font-weight: 700; font-size: 15px; }
+.rec { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; }
+.signal { text-align: center; padding: clamp(24px, 5vw, 48px) 12px; border-radius: 12px; background: var(--ink); color: var(--paper); display: grid; gap: 10px; }
+.signal p { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 5vw, 56px); line-height: 1.05; text-transform: uppercase; text-wrap: balance; }
+
+.impacts { display: grid; gap: 8px; }
+.impact { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.impact .txt { font-weight: 700; min-width: 0; flex: 1 1 220px; }
+
+/* Restore */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.level { display: grid; gap: 8px; align-content: start; }
+.level h3 { font-size: 26px; text-transform: uppercase; }
+.level .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+textarea { width: 100%; min-height: 84px; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; resize: vertical; }
+input[type="text"] { font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; }
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.plan { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 6px; align-content: start; font-size: 15px; }
+.plan b { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+/* Board */
+aside { display: grid; gap: 16px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 960px) { aside { position: static; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+.score { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.score:last-child { border-bottom: 0; }
+.score .nm { font-weight: 700; overflow-wrap: anywhere; }
+.score .pts { font-family: var(--mono); font-weight: 600; font-size: 28px; font-variant-numeric: tabular-nums; min-width: 2.5ch; text-align: right; }
+.score.lead .nm::after { content: " ▲"; color: var(--key); font-size: 13px; }
+.adj { display: flex; gap: 4px; }
+.adj button { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; font-family: var(--mono); }
+.timer { font-family: var(--mono); font-size: 52px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; }
+.timer.low { color: var(--red); }
+.keys { display: flex; gap: 8px; }
+.keys .keyicon { width: 34px; height: 34px; }
+
+/* Briefing */
+.hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; align-items: center; }
+@media (max-width: 760px) { .hero { grid-template-columns: minmax(0, 1fr); } }
+.hero h2 { font-size: clamp(46px, 7vw, 92px); text-transform: uppercase; }
+.monitor { background: #071319; border-radius: 12px; padding: 14px; display: grid; gap: 8px; color: #7FE3C4; font-family: var(--mono); font-size: 13px; }
+.monitor canvas { width: 100%; height: 150px; display: block; }
+.monitor .vitals { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 14px; }
+.monitor .warn { color: #F2B84B; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.steps li { border-top: 3px solid var(--accent); padding-top: 10px; display: grid; gap: 4px; }
+.steps .s { font-family: var(--display); font-weight: 800; font-size: 28px; text-transform: uppercase; }
+.setup { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.setup label { display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+.safety { border-left: 4px solid var(--amber); background: var(--amber-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; max-width: 80ch; }
+.msgs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; list-style: none; padding: 0; margin: 0; }
+.msgs li { background: var(--paper); border-radius: 12px; padding: 16px; font-weight: 700; font-size: 18px; }
+
+/* Key modal */
+.overlay { position: fixed; inset: 0; background: rgba(6, 18, 24, .72); display: grid; place-items: center; padding: 16px; z-index: 20; }
+.modal { background: var(--surface); border-radius: 16px; padding: 32px; max-width: 520px; width: 100%; display: grid; gap: 14px; text-align: center; justify-items: center; }
+.modal .keyicon { width: 96px; height: 96px; animation: turn 900ms cubic-bezier(.2, .8, .2, 1) both; }
+.modal h3 { font-size: 44px; text-transform: uppercase; }
+@keyframes turn { from { transform: rotate(-90deg) scale(.6); opacity: .2; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .modal .keyicon { animation: none; } }
+footer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; color: var(--muted); font-size: 14px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Team Rescue Mission</h1><span class="label">Silent Burnout in Healthcare Teams</span></div>
+    <ol class="track" id="track"></ol>
+  </header>
+  <div class="grid">
+    <main id="main" aria-live="polite"></main>
+    <aside id="board"></aside>
+  </div>
+  <footer>
+    <span>Facilitator view. Answers stay hidden until you press Reveal, so this screen is safe to project.</span>
+    <span id="resetbox"><button class="btn small" data-act="resetAsk">Reset game</button></span>
+  </footer>
+</div>
+<div id="overlay"></div>
+
+<script>
+/* ---------- Content ---------- */
+const STAGES = [
+  { id: "detect", name: "Detect", game: "Spot the Silent Burnout", goal: "Find the hidden signals" },
+  { id: "connect", name: "Connect", game: "The Burnout Detective", goal: "Understand the team impact" },
+  { id: "respond", name: "Respond", game: "Say This, Not That", goal: "Handle the conversation" },
+  { id: "restore", name: "Restore", game: "Sustainability Plan", goal: "Build the team's plan" }
+];
+
+const TRIAGE = {
+  green: "Normal work stress",
+  amber: "Warning sign",
+  red: "Possible silent burnout"
+};
+
+const SCENARIOS = [
+  {
+    who: "Dr. Amira H.", role: "Emergency physician, 6 years", answer: "red",
+    text: "Amira still comes to every shift and completes all tasks on time. But she has stopped joining team discussions, avoids colleagues, rarely speaks about patients beyond what is necessary, and recently said: “I don't really care anymore. I just want to finish my shift.”",
+    signals: ["Withdrawal from team discussions", "Avoiding colleagues", "Emotional distance from patients", "Says she no longer cares"],
+    beneath: "Her performance is intact, which is exactly why this is silent. Exhaustion and cynicism may be well established, and detaching from patients and colleagues may be how she is protecting herself.",
+    response: "A private, unhurried check-in that names what you noticed without judging it. Listen more than you talk, ask what would help, offer something concrete (a shift swap, a debrief, occupational health or the employee assistance programme), and follow up within a week. A team leader should also look at her recent workload and critical incidents."
+  },
+  {
+    who: "Nurse Jonah P.", role: "Medical ward nurse, 4 years", answer: "green",
+    text: "Jonah had a brutal week: two rapid-response calls and a patient death on Thursday. He was short-tempered on Friday and told the huddle he was wiped out. After his weekend off he is back to his usual self, joking with the team and asking how the patient's family is doing.",
+    signals: ["Clear trigger: a hard week and a death", "Said openly how he felt", "Recovered after rest", "Still connected and caring"],
+    beneath: "A normal stress response to a heavy week. The key sign is recovery: rest worked, and his connection to patients and colleagues is intact.",
+    response: "Acknowledge the hard week. A short post-event debrief would still help the whole team. Watch only if the pattern starts repeating without recovery."
+  },
+  {
+    who: "Lena M.", role: "Hospital pharmacist, 8 years", answer: "amber",
+    text: "For three weeks Lena has stayed about 90 minutes late every day. She eats lunch at her desk or not at all, and double-checks her own verifications. When asked, she says: “It's fine, I'll catch up once things calm down.” Things have not calmed down.",
+    signals: ["Weeks of sustained overtime", "Skipped breaks", "Checking her own work twice", "Minimising: “it's fine”"],
+    beneath: "Depletion is building, and anxiety about making an error may be driving the overwork. This is a workload problem that she is trying to solve alone.",
+    response: "Name the pattern kindly and ask about workload. Involve the lead to look at staffing and the queue, protect her breaks, and check in again in two weeks."
+  },
+  {
+    who: "Daniel R.", role: "ICU charge nurse, 12 years", answer: "red",
+    text: "Daniel volunteers for every extra shift and hasn't taken annual leave in over a year. Lately his humour has turned: he calls patients “bed 7” or “another frequent flyer” and rolls his eyes at families. He has taken four single sick days this quarter for “headaches”.",
+    signals: ["No recovery time for over a year", "Depersonalising language about patients", "Cynicism toward families", "Repeated short-notice sick days"],
+    beneath: "He is running on empty. Overcommitment can be a warning sign, not a strength, and dark humour can be detachment used as self-protection.",
+    response: "A private conversation focused on him, not a reprimand about the jokes. A leader should make sure leave is taken and cap extra shifts, and offer occupational health. Address the language as well, because cynicism spreads through a team."
+  },
+  {
+    who: "Dr. Priya S.", role: "Second-year resident", answer: "green",
+    text: "It is board-exam season. Priya is anxious and was tearful after a hard night. She talks openly with peers about the pressure, asked her chief resident for a schedule swap so she can study, and still lights up when she teaches medical students.",
+    signals: ["Time-limited stressor", "Open about how she feels", "Asked for help", "Still finds meaning in the work"],
+    beneath: "High stress, but strong protective factors: connection, help-seeking and meaning. This looks like a hard season, not burnout.",
+    response: "Support the swap and normalise the stress. Check in after the exam, and watch for stress that doesn't lift once it's over."
+  },
+  {
+    who: "Marco T.", role: "Outpatient physiotherapist, 10 years", answer: "amber",
+    text: "Marco used to volunteer to mentor students; this term he said no. In meetings he says: “What's the point? Nothing ever changes here.” His patient outcomes and notes are still good, and he still has lunch with his close colleague.",
+    signals: ["Pulling back from roles he valued", "Growing cynicism about the organisation", "Performance still intact", "Still connected to one colleague"],
+    beneath: "Early cynicism, possibly from feeling unheard. The one strong friendship is a protective factor worth noticing.",
+    response: "Ask him what he would change if he could, and act on at least one concern so he sees that something does change. His colleague can check in informally."
+  },
+  {
+    who: "Grace A.", role: "Senior midwife, 15 years", answer: "red",
+    text: "Grace's documentation is flawless and nobody has a complaint about her. But colleagues have noticed that she sits in her car for 20 minutes before every shift, no longer eats in the staff room, and last week she said quietly: “I feel numb when babies are born now.”",
+    signals: ["Dread before every shift", "Isolating from colleagues", "Numbness toward the most meaningful part of the job", "Competence hides it all"],
+    beneath: "Emotional exhaustion and loss of meaning, hidden behind excellent work. Accumulated trauma from difficult births may be part of it.",
+    response: "A gentle private check-in that reflects back what she said. Ask openly how she has been and offer support routes: peer support, occupational health, psychological support. If she hints at hopelessness, ask directly about her safety."
+  }
+];
+
+const CASE = {
+  who: "Sam Okafor", role: "ICU nurse, 9 years",
+  intro: "Colleagues describe Sam as “the one you want on a bad night.” Over the next few weeks, you notice some things.",
+  clues: [
+    { t: "Increased irritability", d: "Sam snapped at a junior nurse over a delayed medication and at a resident during rounds. Two colleagues mention it in passing.",
+      rec: ["investigate"], note: "One sign is a data point, not a pattern. Notice it and look for more. A quick “You seemed rushed today, all OK?” costs nothing." },
+    { t: "Still performing well", d: "No incidents, clean audits, and families keep praising Sam.",
+      rec: ["investigate"], note: "This is the clue that makes burnout silent. Good performance is not evidence that someone is fine. Many teams stop looking here." },
+    { t: "Stops taking breaks", d: "Sam has worked through every break for two weeks and says, “I'm faster if I just keep going.”",
+      rec: ["investigate", "intervene"], note: "Recovery is disappearing. Keep investigating, or start the conversation now. Both are reasonable. Ignoring it isn't." },
+    { t: "Withdraws from colleagues", d: "Sam skips the team breakfast after night shifts, eats alone and answers messages with one word.",
+      rec: ["intervene"], note: "Now there is a pattern: irritability, overwork and withdrawal. Move from watching to a private, caring conversation." },
+    { t: "“I don't feel anything about the job anymore.”", d: "Sam says it quietly to you during handover.",
+      rec: ["intervene"], note: "Sam has described emotional detachment in their own words. Respond now: thank Sam for telling you, ask more, and offer support. Don't wait for performance to drop." }
+  ]
+};
+const VOTES = [["investigate", "Investigate"], ["ignore", "Ignore"], ["intervene", "Intervene"]];
+
+const IMPACTS = [
+  "Colleagues quietly absorb extra work",
+  "Handovers get thinner and less safe",
+  "Junior staff stop asking questions",
+  "Cynicism spreads through the team",
+  "Patients and families feel less cared for",
+  "Risk of errors and near-misses rises",
+  "More sick leave and last-minute gaps in the rota",
+  "A good clinician leaves the profession"
+];
+
+const STATEMENTS = [
+  { s: "Everyone is tired. You just need a vacation.", a: "unhelpful",
+    why: "It minimises what they feel and offers a quick fix that closes the conversation.",
+    better: "“It sounds like this has been building for a while. What's been the hardest part?”" },
+  { s: "I've noticed you've seemed more withdrawn lately. Do you want to talk about how things have been going?", a: "helpful",
+    why: "It names a specific observation without judging it, and leaves the choice with them." },
+  { s: "Honestly, if you can't handle the pressure, maybe this isn't the job for you.", a: "harmful",
+    why: "It blames and shames, and it teaches the whole team that struggling must be hidden.",
+    better: "“This job puts a lot of pressure on all of us. You don't have to carry it alone. What would help right now?”" },
+  { s: "You're one of the strongest people here. You'll be fine.", a: "unhelpful",
+    why: "It's well meant, but it tells them they have to stay strong and makes it harder to admit they're not fine.",
+    better: "“You carry a lot for this team. Who's looking out for you at the moment?”" },
+  { s: "I can't fix everything, but I'm here. What would help this week: a swap, a proper break, or just someone to talk to?", a: "helpful",
+    why: "It's honest, offers concrete options and lets them choose." },
+  { s: "I'll let the manager know you're struggling.", a: "harmful",
+    why: "Going over their head without consent breaks trust. (If you are worried about their safety, you do need to escalate, but tell them you're doing it and why.)",
+    better: "“Would it help if we spoke to the manager together about your workload? I can come with you.”" },
+  { s: "Have you tried yoga or mindfulness?", a: "unhelpful",
+    why: "Unasked-for advice turns a workplace problem into a personal one and skips the listening.",
+    better: "“What usually helps you recover? And is there anything about the work itself we could change?”" },
+  { s: "That sounds really heavy. Thank you for telling me.", a: "helpful",
+    why: "It validates the feeling and rewards them for speaking up." },
+  { s: "Don't let anyone see you like this. It looks unprofessional.", a: "harmful",
+    why: "It teaches concealment, which is how burnout becomes silent in the first place.",
+    better: "“Let's find somewhere quiet for a few minutes. Take the time you need.”" }
+];
+const CLASSES = [["helpful", "Helpful"], ["unhelpful", "Unhelpful"], ["harmful", "Potentially harmful"]];
+
+const LEVELS = [
+  { id: "me", name: "Me", sub: "What each of us will do", opts: ["Protect recovery between shifts", "Know my own early warning signs", "Pick a peer-support partner", "Set a limit on extra shifts", "Actually use my annual leave"] },
+  { id: "us", name: "Us", sub: "What our team will do", opts: ["Ask “How are we really?” at huddle", "Cover each other's breaks", "Debrief after critical incidents", "Buddy new and returning staff", "Make it normal to say “I'm not OK”"] },
+  { id: "system", name: "System", sub: "What we'll ask leadership for", opts: ["Review workload when sick leave rises", "Fair rota and leave approval", "Easy access to occupational health and EAP", "Leaders visibly take breaks and leave", "Specific, regular recognition"] }
+];
+
+/* ---------- State ---------- */
+const STORE = "rescue-mission-v1";
+function fresh(n) {
+  n = n || 3;
+  const names = ["Team Triage", "Team Pulse", "Team Handover", "Team Rounds"];
+  return {
+    stage: "brief",
+    teams: names.slice(0, n),
+    adj: Array(n).fill(0),
+    keys: {},
+    timerDur: 90,
+    detect: { i: 0, revealed: {}, awards: {} },
+    connect: { shown: 1, recShown: {}, votes: {}, ripple: {}, phase: "case", allShown: false },
+    respond: { i: 0, revealed: {}, picks: {}, rewrite: {} },
+    restore: { tab: 0, plans: {}, owner: {}, own: {} }
+  };
+}
+let S = fresh();
+let modal = null, resetAsk = false;
+const timer = { left: 90, running: false, id: null };
+
+function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
+function load() { try { const v = JSON.parse(localStorage.getItem(STORE)); if (v && v.teams) return v; } catch (e) {} return null; }
+
+/* ---------- Scoring ---------- */
+const AWARDS = [["id", "Correct call", 1], ["hidden", "Hidden sign", 1], ["resp", "Good response", 2], ["bonus", "Spotted what others missed", 1]];
+function scores() {
+  const s = S.teams.map((_, t) => S.adj[t] || 0);
+  for (const i in S.detect.awards) for (const t in S.detect.awards[i]) {
+    const a = S.detect.awards[i][t]; if (s[t] === undefined) continue;
+    AWARDS.forEach(([k, , p]) => { if (a[k]) s[t] += p; });
+  }
+  CASE.clues.forEach((c, ci) => {
+    if (!S.connect.recShown[ci]) return;
+    const v = S.connect.votes[ci] || {};
+    S.teams.forEach((_, t) => { if (v[t] && c.rec.includes(v[t])) s[t] += 1; });
+  });
+  for (const k in S.connect.ripple) (S.connect.ripple[k] || []).forEach(t => { if (s[t] !== undefined) s[t] += 1; });
+  STATEMENTS.forEach((st, i) => {
+    if (!S.respond.revealed[i]) return;
+    const p = S.respond.picks[i] || {}, r = S.respond.rewrite[i] || {};
+    S.teams.forEach((_, t) => { if (p[t] === st.a) s[t] += 1; if (r[t]) s[t] += 2; });
+  });
+  S.teams.forEach((_, t) => {
+    const plan = S.restore.plans[t] || {};
+    LEVELS.forEach(l => { if ((plan[l.id] || []).length) s[t] += 1; });
+    if (S.restore.owner[t]) s[t] += 2;
+  });
+  return s;
+}
+
+/* ---------- Helpers ---------- */
+const h = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const keySvg = got => `<svg class="keyicon${got ? " got" : ""}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="12" r="4.5"/><path d="M12 12h9M18 12v3.5M21 12v2.5"/></svg>`;
+const stageIdx = id => STAGES.findIndex(s => s.id === id);
+const pressed = b => `aria-pressed="${b ? "true" : "false"}"`;
+function head(stage, extra) {
+  const st = STAGES[stageIdx(stage)];
+  return `<div class="stagehead"><span class="label">Stage ${stageIdx(stage) + 1} of 4 · ${h(st.name)} · ${h(st.goal)}</span><h2>${h(st.game)}</h2>${extra ? `<p class="lede">${extra}</p>` : ""}</div>`;
+}
+
+/* ---------- Views ---------- */
+function vBrief() {
+  return `
+  <section class="hero">
+    <div style="display:grid;gap:14px">
+      <span class="label">Mission briefing</span>
+      <h2>Your team is functioning. Something is wrong.</h2>
+      <p class="lede" style="color:var(--muted);max-width:52ch">Every shift is covered and every task gets done. But someone on this team is burning out quietly. Find the signals, understand the impact, respond well, and rebuild. Each stage you complete earns one of four Sustainability Keys.</p>
+    </div>
+    <div class="monitor" aria-label="Patient monitor showing normal vitals and a fading engagement trace">
+      <div class="vitals"><span>HR 74</span><span>BP 118/76</span><span>SpO₂ 98%</span><span class="warn">ENGAGEMENT ↓</span></div>
+      <canvas id="ecg" width="600" height="150"></canvas>
+      <div class="vitals"><span>All tasks complete · 0 incidents</span><span class="warn">Signal fading</span></div>
+    </div>
+  </section>
+  <ol class="steps">
+    ${STAGES.map((s, i) => `<li><span class="label">Stage ${i + 1}</span><span class="s">${h(s.name)}</span><span>${h(s.goal)}</span><span style="color:var(--muted);font-size:15px">${h(s.game)}</span></li>`).join("")}
+  </ol>
+  <section style="display:grid;gap:12px">
+    <span class="label">Set up the room</span>
+    <div class="row"><span>Number of teams</span>${[2, 3, 4].map(n => `<button class="toggle" data-act="teamsCount" data-n="${n}" ${pressed(S.teams.length === n)}>${n}</button>`).join("")}
+      <span style="margin-left:12px">Round timer</span>${[60, 90, 120, 180].map(n => `<button class="toggle" data-act="timerDur" data-n="${n}" ${pressed(S.timerDur === n)}>${n}s</button>`).join("")}</div>
+    <div class="setup">${S.teams.map((n, t) => `<label for="tn${t}">Team ${t + 1} name<input type="text" id="tn${t}" data-team="${t}" value="${h(n)}" maxlength="28"></label>`).join("")}</div>
+  </section>
+  <p class="safety"><b>Facilitator note.</b> This game builds recognition and peer-response skills. It is not a diagnostic tool. If a participant, or anyone they talk about, mentions hopelessness or harming themselves, treat it as urgent: ask directly, stay with them, and use your organisation's urgent support pathway.</p>
+  <div class="nav"><span></span><button class="btn primary" data-act="go" data-s="detect">Start the mission</button></div>`;
+}
+
+function vDetect() {
+  const d = S.detect, i = d.i, sc = SCENARIOS[i], shown = !!d.revealed[i];
+  const aw = d.awards[i] || {};
+  return `${head("detect", "Read the case aloud. Each team holds up a green, amber or red card. Then each team answers: What signals do you see? What could be happening beneath the surface? What would you do as a colleague or team leader?")}
+  <div class="row">${Object.entries(TRIAGE).map(([k, v]) => `<span class="tri ${k}">${h(v)}</span>`).join("")}</div>
+  <article class="case">
+    <span class="label">Case ${i + 1} of ${SCENARIOS.length}</span>
+    <div class="who">${h(sc.who)}</div><span style="color:var(--muted)">${h(sc.role)}</span>
+    <p class="text">${h(sc.text)}</p>
+  </article>
+  ${shown ? `<section class="reveal">
+    <div class="row"><span class="label">Facilitator's read</span><span class="tri ${sc.answer}">${h(TRIAGE[sc.answer])}</span></div>
+    <div class="cols">
+      <div><span class="label">Signals</span><ul>${sc.signals.map(x => `<li>${h(x)}</li>`).join("")}</ul></div>
+      <div><span class="label">Beneath the surface</span><p>${h(sc.beneath)}</p></div>
+      <div><span class="label">A good response</span><p>${h(sc.response)}</p></div>
+    </div>
+  </section>` : `<div class="row"><button class="btn primary" data-act="reveal">Reveal the answer</button><span class="hidden-note">Let every team commit to a card first.</span></div>`}
+  <section style="display:grid;gap:10px"><span class="label">Award points</span>
+    <div class="teams">${S.teams.map((n, t) => { const a = aw[t] || {}; return `<div class="team"><div class="tname">${h(n)}</div><div class="row">${AWARDS.map(([k, l, p]) => `<button class="toggle" data-act="award" data-k="${k}" data-t="${t}" ${pressed(a[k])}>${h(l)} <span class="pts">+${p}</span></button>`).join("")}</div></div>`; }).join("")}</div>
+  </section>
+  <div class="nav">
+    <button class="btn" data-act="detectStep" data-d="-1" ${i === 0 ? "disabled" : ""}>Previous case</button>
+    ${i < SCENARIOS.length - 1 ? `<button class="btn primary" data-act="detectStep" data-d="1">Next case</button>` : `<button class="btn primary" data-act="complete" data-s="detect">Complete Detect and collect the key</button>`}
+  </div>`;
+}
+
+function vConnect() {
+  const c = S.connect;
+  if (c.phase === "ripple") return vRipple();
+  const allDone = c.shown >= CASE.clues.length && c.recShown[CASE.clues.length - 1];
+  return `${head("connect", "Reveal one clue at a time. After each clue, every team decides: Investigate, Ignore or Intervene. Don't name a diagnosis. Decide what you'd do.")}
+  <article class="case"><span class="label">Case file</span><div class="who">${h(CASE.who)}</div><span style="color:var(--muted)">${h(CASE.role)}</span><p class="text">${h(CASE.intro)}</p></article>
+  <ol class="clues">${CASE.clues.map((cl, ci) => {
+    if (ci >= c.shown) return `<li class="clue locked"><span class="n">${ci + 1}</span><div class="body"><span>Clue sealed</span></div></li>`;
+    const v = c.votes[ci] || {}, rs = !!c.recShown[ci];
+    return `<li class="clue"><span class="n">${ci + 1}</span><div class="body">
+      <div class="t">${h(cl.t)}</div><p>${h(cl.d)}</p>
+      <div class="votes">${S.teams.map((n, t) => `<div class="vote"><span class="who">${h(n)}</span>${VOTES.map(([k, l]) => `<button class="toggle" data-act="vote" data-c="${ci}" data-t="${t}" data-v="${k}" ${pressed(v[t] === k)}>${l}${rs && v[t] === k && cl.rec.includes(k) ? ' <span class="pts">+1</span>' : ""}</button>`).join("")}</div>`).join("")}</div>
+      ${rs ? `<div class="rec"><b>Facilitator's read: ${cl.rec.map(r => VOTES.find(x => x[0] === r)[1]).join(" or ")}.</b> ${h(cl.note)}</div>` : `<div class="row"><button class="btn small" data-act="recShow" data-c="${ci}">Show the facilitator's read</button></div>`}
+    </div></li>`;
+  }).join("")}</ol>
+  ${allDone ? `<div class="signal"><span class="label" style="color:inherit;opacity:.7">Case closed</span><p>You weren't looking for a diagnosis. You were looking for a signal.</p></div>` : ""}
+  <div class="nav">
+    <span></span>
+    ${c.shown < CASE.clues.length ? `<button class="btn primary" data-act="nextClue" ${c.recShown[c.shown - 1] ? "" : "disabled"}>Reveal clue ${c.shown + 1}</button>` : allDone ? `<button class="btn primary" data-act="phase" data-p="ripple">Next: the ripple effect</button>` : `<span class="hidden-note">Show the read for clue 5 to close the case.</span>`}
+  </div>`;
+}
+
+function vRipple() {
+  const r = S.connect.ripple;
+  return `${head("connect", "Sam's burnout doesn't stay with Sam. Teams call out who else is affected and how. When a team names an impact on the map, give that team the point.")}
+  <div class="impacts">${IMPACTS.map((x, k) => { const got = r[k] || []; return `<div class="impact"><span class="txt">${got.length || S.connect.allShown ? h(x) : `<span class="hidden-note">Impact ${k + 1}: not named yet</span>`}</span><div class="row">${S.teams.map((n, t) => `<button class="toggle" data-act="ripple" data-k="${k}" data-t="${t}" ${pressed(got.includes(t))}>${h(n)} <span class="pts">+1</span></button>`).join("")}</div></div>`; }).join("")}</div>
+  <div class="nav">
+    <button class="btn" data-act="phase" data-p="case">Back to the case file</button>
+    <div class="row"><button class="btn" data-act="revealImpacts">Show all impacts</button><button class="btn primary" data-act="complete" data-s="connect">Complete Connect and collect the key</button></div>
+  </div>`;
+}
+
+function vRespond() {
+  const r = S.respond, i = r.i, st = STATEMENTS[i], shown = !!r.revealed[i];
+  const p = r.picks[i] || {}, rw = r.rewrite[i] || {};
+  return `${head("respond", "A colleague is showing signs of burnout. Someone says this to them. Teams race to classify it. Then rewrite anything that isn't helpful.")}
+  <article class="case"><span class="label">Statement ${i + 1} of ${STATEMENTS.length}</span><p class="quote">“${h(st.s)}”</p></article>
+  <section style="display:grid;gap:10px"><span class="label">Each team's call</span>
+    <div class="teams">${S.teams.map((n, t) => {
+      const right = shown && p[t] === st.a;
+      return `<div class="team ${shown ? (right ? "correct" : "miss") : ""}"><div class="tname">${h(n)}${shown ? `<span class="mono">${right ? "+1" : "0"}${rw[t] ? " +2" : ""}</span>` : ""}</div>
+        <div class="row">${CLASSES.map(([k, l]) => `<button class="toggle" data-act="pick" data-t="${t}" data-v="${k}" ${pressed(p[t] === k)}>${l}</button>`).join("")}</div>
+        ${shown && st.a !== "helpful" ? `<button class="toggle" data-act="rewrite" data-t="${t}" ${pressed(rw[t])}>Strong rewrite <span class="pts">+2</span></button>` : ""}
+      </div>`; }).join("")}</div>
+  </section>
+  ${shown ? `<section class="reveal">
+    <div class="row"><span class="label">Answer</span><span class="tri ${{ helpful: "green", unhelpful: "amber", harmful: "red" }[st.a]}">${h(CLASSES.find(x => x[0] === st.a)[1])}</span></div>
+    <div class="cols"><div><span class="label">Why</span><p>${h(st.why)}</p></div>
+    ${st.better ? `<div><span class="label">Say this instead</span><p style="font-size:20px">${h(st.better)}</p></div>` : ""}</div>
+  </section>` : `<div class="row"><button class="btn primary" data-act="revealResp">Reveal the answer</button><span class="hidden-note">Record each team's call first.</span></div>`}
+  <div class="nav">
+    <button class="btn" data-act="respondStep" data-d="-1" ${i === 0 ? "disabled" : ""}>Previous statement</button>
+    ${i < STATEMENTS.length - 1 ? `<button class="btn primary" data-act="respondStep" data-d="1">Next statement</button>` : `<button class="btn primary" data-act="complete" data-s="respond">Complete Respond and collect the key</button>`}
+  </div>`;
+}
+
+function vRestore() {
+  const R = S.restore, t = Math.min(R.tab, S.teams.length - 1), plan = R.plans[t] || {};
+  return `${head("restore", "Each team builds a sustainability plan for the team from the mission. Choose at least one action at each level, then write one commitment of your own with a named owner and a date.")}
+  <div class="tabs" role="tablist">${S.teams.map((n, k) => `<button class="toggle" role="tab" data-act="tab" data-t="${k}" ${pressed(k === t)} aria-selected="${k === t}">${h(n)}</button>`).join("")}</div>
+  <div class="levels">${LEVELS.map(l => `<div class="level"><h3>${h(l.name)}</h3><span style="color:var(--muted);font-size:15px">${h(l.sub)} · <span style="font-family:var(--mono)">+1</span> if covered</span>
+    <div class="opts">${l.opts.map((o, oi) => `<button class="toggle" data-act="plan" data-t="${t}" data-l="${l.id}" data-o="${oi}" ${pressed((plan[l.id] || []).includes(oi))}>${h(o)}</button>`).join("")}</div></div>`).join("")}</div>
+  <label for="own${t}" style="display:grid;gap:6px"><span class="label">Our own commitment: who, what, by when</span>
+    <textarea id="own${t}" data-own="${t}" placeholder="e.g. Charge nurse adds a two-minute “How are we really?” round to the 07:30 huddle, starting Monday, reviewed after 4 weeks.">${h(R.own[t] || "")}</textarea></label>
+  <div class="row"><button class="toggle" data-act="owner" data-t="${t}" ${pressed(R.owner[t])}>Names an owner and a date <span class="pts">+2</span></button></div>
+  <section style="display:grid;gap:10px"><div class="row spread"><span class="label">All plans</span><span id="copyplans"><button class="btn small" data-act="copy">Copy all plans</button></span></div>
+    <div class="plans">${S.teams.map((n, k) => planCard(n, k)).join("")}</div></section>
+  <div class="nav"><span></span><button class="btn primary" data-act="complete" data-s="restore">Complete Restore and collect the final key</button></div>`;
+}
+function planCard(n, k) {
+  const p = S.restore.plans[k] || {};
+  return `<div class="plan"><strong>${h(n)}</strong>${LEVELS.map(l => `<b>${h(l.name)}</b><span>${(p[l.id] || []).length ? (p[l.id] || []).map(o => h(l.opts[o])).join("; ") : '<span class="hidden-note">Nothing yet</span>'}</span>`).join("")}<b>Commitment</b><span>${S.restore.own[k] ? h(S.restore.own[k]) : '<span class="hidden-note">Nothing yet</span>'}</span></div>`;
+}
+function plansText() {
+  return S.teams.map((n, k) => {
+    const p = S.restore.plans[k] || {};
+    return [n.toUpperCase(), ...LEVELS.map(l => `${l.name}: ${(p[l.id] || []).map(o => l.opts[o]).join("; ") || "-"}`), `Commitment: ${S.restore.own[k] || "-"}`].join("\n");
+  }).join("\n\n");
+}
+
+function vDebrief() {
+  const sc = scores(), order = S.teams.map((n, t) => ({ n, s: sc[t] })).sort((a, b) => b.s - a.s);
+  const got = STAGES.filter(s => S.keys[s.id]).length;
+  return `<div class="stagehead"><span class="label">Mission debrief · ${got} of 4 keys collected</span><h2>${got === 4 ? "Team restored" : "Mission in progress"}</h2></div>
+  <div class="keys">${STAGES.map(s => keySvg(S.keys[s.id])).join("")}</div>
+  <section style="display:grid;gap:8px"><span class="label">Final standings</span>
+    ${order.map((o, k) => `<div class="score${k === 0 ? " lead" : ""}"><span class="nm">${k + 1}. ${h(o.n)}</span><span></span><span class="pts">${o.s}</span></div>`).join("")}
+  </section>
+  <section style="display:grid;gap:10px"><span class="label">Take these back to your ward</span>
+  <ul class="msgs">
+    <li>Silent burnout hides behind good performance.</li>
+    <li>Look for change from someone's own normal, and for patterns rather than single signs.</li>
+    <li>You don't need a diagnosis to start a caring conversation.</li>
+    <li>Burnout is a team and system issue, not a personal failing.</li>
+  </ul></section>
+  <div class="signal"><p>You weren't looking for a diagnosis. You were looking for a signal.</p></div>`;
+}
+
+function vTrack() {
+  const cur = S.stage;
+  return [`<li><button data-act="go" data-s="brief" ${cur === "brief" ? 'aria-current="step"' : ""}>Brief</button></li>`]
+    .concat(STAGES.map(s => `<li class="arrow" aria-hidden="true">→</li><li><button data-act="go" data-s="${s.id}" ${cur === s.id ? 'aria-current="step"' : ""}>${keySvg(S.keys[s.id])}${h(s.name)}</button></li>`))
+    .concat([`<li class="arrow" aria-hidden="true">→</li><li><button data-act="go" data-s="debrief" ${cur === "debrief" ? 'aria-current="step"' : ""}>Debrief</button></li>`]).join("");
+}
+
+function vBoard() {
+  const sc = scores(), max = Math.max(...sc);
+  const got = STAGES.filter(s => S.keys[s.id]).length;
+  return `<div class="panel"><span class="label">Scoreboard</span>
+    <div>${S.teams.map((n, t) => `<div class="score${max > 0 && sc[t] === max ? " lead" : ""}"><span class="nm">${h(n)}</span>
+      <span class="adj"><button data-act="adj" data-t="${t}" data-d="-1" aria-label="Take a point from ${h(n)}">−</button><button data-act="adj" data-t="${t}" data-d="1" aria-label="Give ${h(n)} a bonus point">+</button></span>
+      <span class="pts">${sc[t]}</span></div>`).join("")}</div>
+  </div>
+  <div class="panel"><span class="label">Round timer</span>
+    <div class="timer${timer.left <= 10 && timer.left > 0 ? " low" : ""}" id="timer">${fmt(timer.left)}</div>
+    <div class="row"><button class="btn small" data-act="timerToggle">${timer.running ? "Pause" : timer.left === 0 ? "Restart" : "Start"}</button><button class="btn small" data-act="timerReset">Reset</button></div>
+  </div>
+  <div class="panel"><span class="label">Sustainability keys · ${got} of 4</span><div class="keys">${STAGES.map(s => keySvg(S.keys[s.id])).join("")}</div></div>`;
+}
+
+function vModal() {
+  if (!modal) return "";
+  const st = STAGES[stageIdx(modal)], n = stageIdx(modal) + 1, next = STAGES[n];
+  return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="mh"><div class="modal">
+    ${keySvg(true)}<span class="label">Sustainability key ${n} of 4</span><h3 id="mh">${h(st.name)} unlocked</h3>
+    <p>${h(st.goal)}: done.</p>
+    <button class="btn primary" data-act="closeModal">${next ? `Continue to ${h(next.name)}` : "Go to the mission debrief"}</button>
+  </div></div>`;
+}
+
+/* ---------- Render ---------- */
+const VIEWS = { brief: vBrief, detect: vDetect, connect: vConnect, respond: vRespond, restore: vRestore, debrief: vDebrief };
+function render() {
+  document.getElementById("track").innerHTML = vTrack();
+  document.getElementById("main").innerHTML = VIEWS[S.stage]();
+  document.getElementById("board").innerHTML = vBoard();
+  document.getElementById("overlay").innerHTML = vModal();
+  document.getElementById("resetbox").innerHTML = resetAsk
+    ? `<span class="row"><span>Clear all scores and answers?</span><button class="btn small" data-act="resetYes">Reset</button><button class="btn small" data-act="resetNo">Cancel</button></span>`
+    : `<button class="btn small" data-act="resetAsk">Reset game</button>`;
+  if (S.stage === "brief") startEcg(); else stopEcg();
+  save();
+}
+function boardOnly() { document.getElementById("board").innerHTML = vBoard(); save(); }
+
+/* ---------- Timer ---------- */
+const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+function tick() {
+  timer.left = Math.max(0, timer.left - 1);
+  if (timer.left === 0) { clearInterval(timer.id); timer.running = false; boardOnly(); return; }
+  const el = document.getElementById("timer");
+  if (el) { el.textContent = fmt(timer.left); el.classList.toggle("low", timer.left <= 10); }
+}
+
+/* ---------- Actions ---------- */
+const nest = (o, a, b) => ((o[a] = o[a] || {}), (o[a][b] = o[a][b] || {}), o[a][b]);
+const ACT = {
+  go: e => { S.stage = e.s; window.scrollTo(0, 0); },
+  teamsCount: e => {
+    const n = +e.n, names = ["Team Triage", "Team Pulse", "Team Handover", "Team Rounds"];
+    S.teams = Array.from({ length: n }, (_, t) => S.teams[t] || names[t]);
+    S.adj = Array.from({ length: n }, (_, t) => S.adj[t] || 0);
+  },
+  timerDur: e => { S.timerDur = +e.n; if (!timer.running) timer.left = S.timerDur; },
+  reveal: () => { S.detect.revealed[S.detect.i] = true; },
+  award: e => { const a = nest(S.detect.awards, S.detect.i, e.t); a[e.k] = !a[e.k]; },
+  detectStep: e => { S.detect.i = Math.max(0, Math.min(SCENARIOS.length - 1, S.detect.i + +e.d)); resetTimer(); },
+  vote: e => { const v = (S.connect.votes[e.c] = S.connect.votes[e.c] || {}); v[e.t] = v[e.t] === e.v ? undefined : e.v; },
+  recShow: e => { S.connect.recShown[e.c] = true; },
+  nextClue: () => { S.connect.shown = Math.min(CASE.clues.length, S.connect.shown + 1); resetTimer(); },
+  phase: e => { S.connect.phase = e.p; window.scrollTo(0, 0); },
+  ripple: e => { const k = e.k, t = +e.t, a = (S.connect.ripple[k] = S.connect.ripple[k] || []); const at = a.indexOf(t); at >= 0 ? a.splice(at, 1) : a.push(t); },
+  revealImpacts: () => { S.connect.allShown = true; },
+  pick: e => { const p = (S.respond.picks[S.respond.i] = S.respond.picks[S.respond.i] || {}); p[e.t] = p[e.t] === e.v ? undefined : e.v; },
+  revealResp: () => { S.respond.revealed[S.respond.i] = true; },
+  rewrite: e => { const r = (S.respond.rewrite[S.respond.i] = S.respond.rewrite[S.respond.i] || {}); r[e.t] = !r[e.t]; },
+  respondStep: e => { S.respond.i = Math.max(0, Math.min(STATEMENTS.length - 1, S.respond.i + +e.d)); resetTimer(); },
+  tab: e => { S.restore.tab = +e.t; },
+  plan: e => { const p = (S.restore.plans[e.t] = S.restore.plans[e.t] || {}); const a = (p[e.l] = p[e.l] || []); const o = +e.o, at = a.indexOf(o); at >= 0 ? a.splice(at, 1) : a.push(o); },
+  owner: e => { S.restore.owner[e.t] = !S.restore.owner[e.t]; },
+  copy: () => {
+    const box = document.getElementById("copyplans"), done = msg => { if (box) box.innerHTML = `<span class="label">${msg}</span>`; };
+    const fallback = () => { const ta = document.createElement("textarea"); ta.value = plansText(); ta.style.height = "200px"; box.replaceWith(ta); ta.select(); };
+    try { navigator.clipboard.writeText(plansText()).then(() => done("Copied"), fallback); } catch (err) { fallback(); }
+    return "noRender";
+  },
+  complete: e => { S.keys[e.s] = true; modal = e.s; },
+  closeModal: () => { const n = STAGES[stageIdx(modal) + 1]; S.stage = n ? n.id : "debrief"; modal = null; resetTimer(); window.scrollTo(0, 0); },
+  adj: e => { S.adj[e.t] = (S.adj[e.t] || 0) + +e.d; },
+  timerToggle: () => {
+    if (timer.running) { clearInterval(timer.id); timer.running = false; }
+    else { if (timer.left === 0) timer.left = S.timerDur; timer.running = true; timer.id = setInterval(tick, 1000); }
+    boardOnly(); return "noRender";
+  },
+  timerReset: () => { resetTimer(); boardOnly(); return "noRender"; },
+  resetAsk: () => { resetAsk = true; },
+  resetNo: () => { resetAsk = false; },
+  resetYes: () => { S = fresh(S.teams.length); resetAsk = false; modal = null; resetTimer(); }
+};
+function resetTimer() { clearInterval(timer.id); timer.running = false; timer.left = S.timerDur; }
+
+document.addEventListener("click", ev => {
+  const el = ev.target.closest("[data-act]"); if (!el || el.disabled) return;
+  const fn = ACT[el.dataset.act]; if (!fn) return;
+  if (fn(el.dataset) !== "noRender") render();
+});
+document.addEventListener("change", ev => {
+  const t = ev.target;
+  if (t.dataset.team !== undefined) { S.teams[+t.dataset.team] = t.value.trim() || `Team ${+t.dataset.team + 1}`; render(); }
+});
+document.addEventListener("input", ev => {
+  const t = ev.target;
+  if (t.dataset.own !== undefined) {
+    S.restore.own[+t.dataset.own] = t.value; save();
+    const plans = document.querySelector(".plans"); if (plans) plans.innerHTML = S.teams.map((n, k) => planCard(n, k)).join("");
+  }
+});
+document.addEventListener("keydown", ev => { if (ev.key === "Escape" && modal) ACT.closeModal() !== "noRender" && render(); });
+
+/* ---------- Monitor trace ---------- */
+let ecgRaf = null;
+function stopEcg() { if (ecgRaf) cancelAnimationFrame(ecgRaf); ecgRaf = null; }
+function startEcg() {
+  stopEcg();
+  const cv = document.getElementById("ecg"); if (!cv) return;
+  const ctx = cv.getContext("2d"), W = cv.width, H = cv.height, mid = H * 0.58;
+  const beat = x => { // one PQRST complex over x in [0,1)
+    if (x < .1) return Math.sin(x / .1 * Math.PI) * .12;
+    if (x > .18 && x < .2) return -.15;
+    if (x >= .2 && x < .24) return 1 - Math.abs(x - .22) / .02 * 1.0;
+    if (x >= .24 && x < .27) return -.3;
+    if (x > .38 && x < .55) return Math.sin((x - .38) / .17 * Math.PI) * .22;
+    return 0;
+  };
+  const y = (px, amp) => mid - beat(((px / 120) % 1 + 1) % 1) * H * .45 * amp;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const draw = t => {
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = "rgba(127,227,196,.12)"; ctx.lineWidth = 1;
+    for (let gx = 0; gx < W; gx += 30) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+    for (let gy = 0; gy < H; gy += 30) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+    const shift = reduce ? 0 : (t / 12) % 120;
+    ctx.lineWidth = 2.2; ctx.lineJoin = "round";
+    ctx.beginPath();
+    for (let px = 0; px <= W; px += 2) {
+      const amp = 1 - .78 * (px / W); // the rhythm keeps going; the signal quietly fades
+      const yy = y(px + shift, amp);
+      px === 0 ? ctx.moveTo(px, yy) : ctx.lineTo(px, yy);
+    }
+    const g = ctx.createLinearGradient(0, 0, W, 0);
+    g.addColorStop(0, "#7FE3C4"); g.addColorStop(1, "#F2B84B");
+    ctx.strokeStyle = g; ctx.stroke();
+    if (!reduce) ecgRaf = requestAnimationFrame(draw);
+  };
+  draw(0);
+}
+
+/* ---------- Boot ---------- */
+function start(data) {
+  const saved = (data && data.state) || load();
+  if (saved) S = Object.assign(fresh(saved.teams.length), saved);
+  timer.left = S.timerDur;
+  render();
+}
+window.claude?.hot?.snapshot?.(() => ({ state: S }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
