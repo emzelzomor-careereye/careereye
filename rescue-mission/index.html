@@ -98,6 +98,9 @@ main { background: var(--surface); border: 1px solid var(--line); border-radius:
 .tri.green { color: var(--green); background: var(--green-bg); }
 .tri.amber { color: var(--amber); background: var(--amber-bg); }
 .tri.red { color: var(--red); background: var(--red-bg); }
+button.tri { cursor: pointer; font-size: 17px; }
+button.tri[aria-pressed="false"] { opacity: .5; }
+button.tri[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px currentColor; }
 
 /* Case card */
 .case { border: 1px solid var(--line); border-radius: 12px; padding: clamp(18px, 3vw, 28px); display: grid; gap: 12px; background: var(--paper); }
@@ -205,7 +208,7 @@ footer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-betwe
     <aside id="board"></aside>
   </div>
   <footer>
-    <span>Facilitator view. Answers stay hidden until you press Reveal, so this screen is safe to project.</span>
+    <span id="footnote"></span>
     <span id="resetbox"><button class="btn small" data-act="resetAsk">Reset game</button></span>
   </footer>
 </div>
@@ -348,11 +351,13 @@ function fresh(n) {
   const names = ["Team Triage", "Team Pulse", "Team Handover", "Team Rounds"];
   return {
     stage: "brief",
+    mode: "teams",
     teams: names.slice(0, n),
+    notes: {},
     adj: Array(n).fill(0),
     keys: {},
     timerDur: 90,
-    detect: { i: 0, revealed: {}, awards: {} },
+    detect: { i: 0, revealed: {}, awards: {}, pick: {} },
     connect: { shown: 1, recShown: {}, votes: {}, ripple: {}, phase: "case", allShown: false },
     respond: { i: 0, revealed: {}, picks: {}, rewrite: {} },
     restore: { tab: 0, plans: {}, owner: {}, own: {} }
@@ -373,6 +378,7 @@ function scores() {
     const a = S.detect.awards[i][t]; if (s[t] === undefined) continue;
     AWARDS.forEach(([k, , p]) => { if (a[k]) s[t] += p; });
   }
+  if (solo()) SCENARIOS.forEach((sc, i) => { if (S.detect.revealed[i] && (S.detect.pick || {})[i] === sc.answer) s[0] += 1; });
   CASE.clues.forEach((c, ci) => {
     if (!S.connect.recShown[ci]) return;
     const v = S.connect.votes[ci] || {};
@@ -392,7 +398,16 @@ function scores() {
   return s;
 }
 
+// Best possible solo score, for the "x of y" readout.
+function maxScore() {
+  return SCENARIOS.length * 4 + CASE.clues.length + IMPACTS.length
+    + STATEMENTS.length + STATEMENTS.filter(x => x.a !== "helpful").length * 2 + LEVELS.length + 2;
+}
+
 /* ---------- Helpers ---------- */
+const solo = () => S.mode === "solo";
+const readLabel = () => solo() ? "Expert read" : "Facilitator's read";
+const note = (key, ph, rows) => `<textarea id="n-${key}" data-note="${key}" placeholder="${h(ph)}"${rows ? ` style="min-height:${rows}px"` : ""}>${h(S.notes[key] || "")}</textarea>`;
 const h = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const keySvg = got => `<svg class="keyicon${got ? " got" : ""}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="12" r="4.5"/><path d="M12 12h9M18 12v3.5M21 12v2.5"/></svg>`;
 const stageIdx = id => STAGES.findIndex(s => s.id === id);
@@ -421,36 +436,51 @@ function vBrief() {
     ${STAGES.map((s, i) => `<li><span class="label">Stage ${i + 1}</span><span class="s">${h(s.name)}</span><span>${h(s.goal)}</span><span style="color:var(--muted);font-size:15px">${h(s.game)}</span></li>`).join("")}
   </ol>
   <section style="display:grid;gap:12px">
-    <span class="label">Set up the room</span>
-    <div class="row"><span>Number of teams</span>${[2, 3, 4].map(n => `<button class="toggle" data-act="teamsCount" data-n="${n}" ${pressed(S.teams.length === n)}>${n}</button>`).join("")}
-      <span style="margin-left:12px">Round timer</span>${[60, 90, 120, 180].map(n => `<button class="toggle" data-act="timerDur" data-n="${n}" ${pressed(S.timerDur === n)}>${n}s</button>`).join("")}</div>
-    <div class="setup">${S.teams.map((n, t) => `<label for="tn${t}">Team ${t + 1} name<input type="text" id="tn${t}" data-team="${t}" value="${h(n)}" maxlength="28"></label>`).join("")}</div>
+    <span class="label">How are you playing?</span>
+    <div class="row">
+      <button class="toggle" data-act="mode" data-m="solo" ${pressed(solo())}>Solo: one player, self-paced</button>
+      <button class="toggle" data-act="mode" data-m="teams" ${pressed(!solo())}>Teams: 2–4 teams, one shared screen</button>
+    </div>
+    <div class="row">${solo() ? "" : `<span>Number of teams</span>${[2, 3, 4].map(n => `<button class="toggle" data-act="teamsCount" data-n="${n}" ${pressed(S.teams.length === n)}>${n}</button>`).join("")}`}
+      <span${solo() ? "" : ' style="margin-left:12px"'}>Round timer</span>${[60, 90, 120, 180].map(n => `<button class="toggle" data-act="timerDur" data-n="${n}" ${pressed(S.timerDur === n)}>${n}s</button>`).join("")}</div>
+    <div class="setup">${solo()
+      ? `<label for="tn0">Your name<input type="text" id="tn0" data-team="0" value="${h(S.teams[0])}" maxlength="28"></label>`
+      : S.teams.map((n, t) => `<label for="tn${t}">Team ${t + 1} name<input type="text" id="tn${t}" data-team="${t}" value="${h(n)}" maxlength="28"></label>`).join("")}</div>
   </section>
-  <p class="safety"><b>Facilitator note.</b> This game builds recognition and peer-response skills. It is not a diagnostic tool. If a participant, or anyone they talk about, mentions hopelessness or harming themselves, treat it as urgent: ask directly, stay with them, and use your organisation's urgent support pathway.</p>
+  <p class="safety"><b>${solo() ? "Before you start." : "Facilitator note."}</b> This game builds recognition and peer-response skills. It is not a diagnostic tool. If a participant, or anyone they talk about, mentions hopelessness or harming themselves, treat it as urgent: ask directly, stay with them, and use your organisation's urgent support pathway.</p>
   <div class="nav"><span></span><button class="btn primary" data-act="go" data-s="detect">Start the mission</button></div>`;
 }
 
 function vDetect() {
   const d = S.detect, i = d.i, sc = SCENARIOS[i], shown = !!d.revealed[i];
   const aw = d.awards[i] || {};
-  return `${head("detect", "Read the case aloud. Each team holds up a green, amber or red card. Then each team answers: What signals do you see? What could be happening beneath the surface? What would you do as a colleague or team leader?")}
-  <div class="row">${Object.entries(TRIAGE).map(([k, v]) => `<span class="tri ${k}">${h(v)}</span>`).join("")}</div>
+  const pick = (d.pick || {})[i];
+  return `${head("detect", solo()
+    ? "Read the case and make your call: green, amber or red. Jot down what signals you see, what could be happening beneath the surface, and what you would do. Then reveal the expert read and check yourself."
+    : "Read the case aloud. Each team holds up a green, amber or red card. Then each team answers: What signals do you see? What could be happening beneath the surface? What would you do as a colleague or team leader?")}
+  ${solo() ? "" : `<div class="row">${Object.entries(TRIAGE).map(([k, v]) => `<span class="tri ${k}">${h(v)}</span>`).join("")}</div>`}
   <article class="case">
     <span class="label">Case ${i + 1} of ${SCENARIOS.length}</span>
     <div class="who">${h(sc.who)}</div><span style="color:var(--muted)">${h(sc.role)}</span>
     <p class="text">${h(sc.text)}</p>
   </article>
+  ${solo() ? `<section style="display:grid;gap:10px"><span class="label">Your call</span>
+    <div class="row">${Object.entries(TRIAGE).map(([k, v]) => `<button class="tri ${k}" data-act="dpick" data-v="${k}" ${pressed(pick === k)} ${shown ? "disabled" : ""}>${h(v)}</button>`).join("")}</div>
+    ${note("d" + i, "Signals I see, what might be going on, and what I would do…")}
+  </section>` : ""}
   ${shown ? `<section class="reveal">
-    <div class="row"><span class="label">Facilitator's read</span><span class="tri ${sc.answer}">${h(TRIAGE[sc.answer])}</span></div>
+    <div class="row"><span class="label">${readLabel()}</span><span class="tri ${sc.answer}">${h(TRIAGE[sc.answer])}</span>${solo() ? `<span style="font-family:var(--mono)">${pick === sc.answer ? "You got it: +1" : "Not quite: 0"}</span>` : ""}</div>
     <div class="cols">
       <div><span class="label">Signals</span><ul>${sc.signals.map(x => `<li>${h(x)}</li>`).join("")}</ul></div>
       <div><span class="label">Beneath the surface</span><p>${h(sc.beneath)}</p></div>
       <div><span class="label">A good response</span><p>${h(sc.response)}</p></div>
     </div>
-  </section>` : `<div class="row"><button class="btn primary" data-act="reveal">Reveal the answer</button><span class="hidden-note">Let every team commit to a card first.</span></div>`}
-  <section style="display:grid;gap:10px"><span class="label">Award points</span>
+  </section>` : `<div class="row"><button class="btn primary" data-act="reveal" ${solo() && !pick ? "disabled" : ""}>Reveal the answer</button><span class="hidden-note">${solo() ? "Make your call first." : "Let every team commit to a card first."}</span></div>`}
+  ${solo() ? (shown ? `<section style="display:grid;gap:10px"><span class="label">Check yourself against the expert read</span>
+    <div class="row">${AWARDS.filter(([k]) => k === "hidden" || k === "resp").map(([k, , p]) => `<button class="toggle" data-act="award" data-k="${k}" data-t="0" ${pressed((aw[0] || {})[k])}>${k === "hidden" ? "I spotted a hidden sign" : "My response matched"} <span class="pts">+${p}</span></button>`).join("")}</div>
+  </section>` : "") : `<section style="display:grid;gap:10px"><span class="label">Award points</span>
     <div class="teams">${S.teams.map((n, t) => { const a = aw[t] || {}; return `<div class="team"><div class="tname">${h(n)}</div><div class="row">${AWARDS.map(([k, l, p]) => `<button class="toggle" data-act="award" data-k="${k}" data-t="${t}" ${pressed(a[k])}>${h(l)} <span class="pts">+${p}</span></button>`).join("")}</div></div>`; }).join("")}</div>
-  </section>
+  </section>`}
   <div class="nav">
     <button class="btn" data-act="detectStep" data-d="-1" ${i === 0 ? "disabled" : ""}>Previous case</button>
     ${i < SCENARIOS.length - 1 ? `<button class="btn primary" data-act="detectStep" data-d="1">Next case</button>` : `<button class="btn primary" data-act="complete" data-s="detect">Complete Detect and collect the key</button>`}
@@ -461,7 +491,9 @@ function vConnect() {
   const c = S.connect;
   if (c.phase === "ripple") return vRipple();
   const allDone = c.shown >= CASE.clues.length && c.recShown[CASE.clues.length - 1];
-  return `${head("connect", "Reveal one clue at a time. After each clue, every team decides: Investigate, Ignore or Intervene. Don't name a diagnosis. Decide what you'd do.")}
+  return `${head("connect", solo()
+    ? "Clues arrive one at a time. After each one, decide: Investigate, Ignore or Intervene. Don't name a diagnosis. Decide what you'd do, then compare with the expert read."
+    : "Reveal one clue at a time. After each clue, every team decides: Investigate, Ignore or Intervene. Don't name a diagnosis. Decide what you'd do.")}
   <article class="case"><span class="label">Case file</span><div class="who">${h(CASE.who)}</div><span style="color:var(--muted)">${h(CASE.role)}</span><p class="text">${h(CASE.intro)}</p></article>
   <ol class="clues">${CASE.clues.map((cl, ci) => {
     if (ci >= c.shown) return `<li class="clue locked"><span class="n">${ci + 1}</span><div class="body"><span>Clue sealed</span></div></li>`;
@@ -469,7 +501,7 @@ function vConnect() {
     return `<li class="clue"><span class="n">${ci + 1}</span><div class="body">
       <div class="t">${h(cl.t)}</div><p>${h(cl.d)}</p>
       <div class="votes">${S.teams.map((n, t) => `<div class="vote"><span class="who">${h(n)}</span>${VOTES.map(([k, l]) => `<button class="toggle" data-act="vote" data-c="${ci}" data-t="${t}" data-v="${k}" ${pressed(v[t] === k)}>${l}${rs && v[t] === k && cl.rec.includes(k) ? ' <span class="pts">+1</span>' : ""}</button>`).join("")}</div>`).join("")}</div>
-      ${rs ? `<div class="rec"><b>Facilitator's read: ${cl.rec.map(r => VOTES.find(x => x[0] === r)[1]).join(" or ")}.</b> ${h(cl.note)}</div>` : `<div class="row"><button class="btn small" data-act="recShow" data-c="${ci}">Show the facilitator's read</button></div>`}
+      ${rs ? `<div class="rec"><b>${readLabel()}: ${cl.rec.map(r => VOTES.find(x => x[0] === r)[1]).join(" or ")}.</b> ${h(cl.note)}</div>` : `<div class="row"><button class="btn small" data-act="recShow" data-c="${ci}" ${solo() && !v[0] ? "disabled" : ""}>Show the ${readLabel().toLowerCase()}</button>${solo() && !v[0] ? '<span class="hidden-note">Choose first.</span>' : ""}</div>`}
     </div></li>`;
   }).join("")}</ol>
   ${allDone ? `<div class="signal"><span class="label" style="color:inherit;opacity:.7">Case closed</span><p>You weren't looking for a diagnosis. You were looking for a signal.</p></div>` : ""}
@@ -481,6 +513,13 @@ function vConnect() {
 
 function vRipple() {
   const r = S.connect.ripple;
+  if (solo()) return `${head("connect", "Sam's burnout doesn't stay with Sam. List every way it could affect colleagues, patients and the organisation. Then reveal the ripple map and give yourself a point for each impact you named.")}
+  ${note("ripple", "Who else is affected, and how?", 140)}
+  ${S.connect.allShown ? `<div class="impacts">${IMPACTS.map((x, k) => `<div class="impact"><span class="txt">${h(x)}</span><button class="toggle" data-act="ripple" data-k="${k}" data-t="0" ${pressed((r[k] || []).includes(0))}>I named this <span class="pts">+1</span></button></div>`).join("")}</div>` : ""}
+  <div class="nav">
+    <button class="btn" data-act="phase" data-p="case">Back to the case file</button>
+    ${S.connect.allShown ? `<button class="btn primary" data-act="complete" data-s="connect">Complete Connect and collect the key</button>` : `<button class="btn primary" data-act="revealImpacts">Reveal the ripple map</button>`}
+  </div>`;
   return `${head("connect", "Sam's burnout doesn't stay with Sam. Teams call out who else is affected and how. When a team names an impact on the map, give that team the point.")}
   <div class="impacts">${IMPACTS.map((x, k) => { const got = r[k] || []; return `<div class="impact"><span class="txt">${got.length || S.connect.allShown ? h(x) : `<span class="hidden-note">Impact ${k + 1}: not named yet</span>`}</span><div class="row">${S.teams.map((n, t) => `<button class="toggle" data-act="ripple" data-k="${k}" data-t="${t}" ${pressed(got.includes(t))}>${h(n)} <span class="pts">+1</span></button>`).join("")}</div></div>`; }).join("")}</div>
   <div class="nav">
@@ -492,21 +531,24 @@ function vRipple() {
 function vRespond() {
   const r = S.respond, i = r.i, st = STATEMENTS[i], shown = !!r.revealed[i];
   const p = r.picks[i] || {}, rw = r.rewrite[i] || {};
-  return `${head("respond", "A colleague is showing signs of burnout. Someone says this to them. Teams race to classify it. Then rewrite anything that isn't helpful.")}
+  return `${head("respond", solo()
+    ? "A colleague is showing signs of burnout. Someone says this to them. Classify it, and if it isn't helpful, write a better version before you reveal the answer."
+    : "A colleague is showing signs of burnout. Someone says this to them. Teams race to classify it. Then rewrite anything that isn't helpful.")}
   <article class="case"><span class="label">Statement ${i + 1} of ${STATEMENTS.length}</span><p class="quote">“${h(st.s)}”</p></article>
-  <section style="display:grid;gap:10px"><span class="label">Each team's call</span>
+  <section style="display:grid;gap:10px"><span class="label">${solo() ? "Your call" : "Each team's call"}</span>
     <div class="teams">${S.teams.map((n, t) => {
       const right = shown && p[t] === st.a;
       return `<div class="team ${shown ? (right ? "correct" : "miss") : ""}"><div class="tname">${h(n)}${shown ? `<span class="mono">${right ? "+1" : "0"}${rw[t] ? " +2" : ""}</span>` : ""}</div>
         <div class="row">${CLASSES.map(([k, l]) => `<button class="toggle" data-act="pick" data-t="${t}" data-v="${k}" ${pressed(p[t] === k)}>${l}</button>`).join("")}</div>
-        ${shown && st.a !== "helpful" ? `<button class="toggle" data-act="rewrite" data-t="${t}" ${pressed(rw[t])}>Strong rewrite <span class="pts">+2</span></button>` : ""}
+        ${solo() ? note("r" + i, "Your rewrite, if it needs one…", 70) : ""}
+        ${shown && st.a !== "helpful" ? `<button class="toggle" data-act="rewrite" data-t="${t}" ${pressed(rw[t])}>${solo() ? "My rewrite was as good" : "Strong rewrite"} <span class="pts">+2</span></button>` : ""}
       </div>`; }).join("")}</div>
   </section>
   ${shown ? `<section class="reveal">
     <div class="row"><span class="label">Answer</span><span class="tri ${{ helpful: "green", unhelpful: "amber", harmful: "red" }[st.a]}">${h(CLASSES.find(x => x[0] === st.a)[1])}</span></div>
     <div class="cols"><div><span class="label">Why</span><p>${h(st.why)}</p></div>
     ${st.better ? `<div><span class="label">Say this instead</span><p style="font-size:20px">${h(st.better)}</p></div>` : ""}</div>
-  </section>` : `<div class="row"><button class="btn primary" data-act="revealResp">Reveal the answer</button><span class="hidden-note">Record each team's call first.</span></div>`}
+  </section>` : `<div class="row"><button class="btn primary" data-act="revealResp" ${solo() && !p[0] ? "disabled" : ""}>Reveal the answer</button><span class="hidden-note">${solo() ? "Make your call first." : "Record each team's call first."}</span></div>`}
   <div class="nav">
     <button class="btn" data-act="respondStep" data-d="-1" ${i === 0 ? "disabled" : ""}>Previous statement</button>
     ${i < STATEMENTS.length - 1 ? `<button class="btn primary" data-act="respondStep" data-d="1">Next statement</button>` : `<button class="btn primary" data-act="complete" data-s="respond">Complete Respond and collect the key</button>`}
@@ -515,14 +557,16 @@ function vRespond() {
 
 function vRestore() {
   const R = S.restore, t = Math.min(R.tab, S.teams.length - 1), plan = R.plans[t] || {};
-  return `${head("restore", "Each team builds a sustainability plan for the team from the mission. Choose at least one action at each level, then write one commitment of your own with a named owner and a date.")}
-  <div class="tabs" role="tablist">${S.teams.map((n, k) => `<button class="toggle" role="tab" data-act="tab" data-t="${k}" ${pressed(k === t)} aria-selected="${k === t}">${h(n)}</button>`).join("")}</div>
+  return `${head("restore", solo()
+    ? "Build a sustainability plan for your own team. Choose at least one action at each level, then write one commitment with a named owner and a date."
+    : "Each team builds a sustainability plan for the team from the mission. Choose at least one action at each level, then write one commitment of your own with a named owner and a date.")}
+  <div class="tabs" role="tablist"${solo() ? " hidden" : ""}>${S.teams.map((n, k) => `<button class="toggle" role="tab" data-act="tab" data-t="${k}" ${pressed(k === t)} aria-selected="${k === t}">${h(n)}</button>`).join("")}</div>
   <div class="levels">${LEVELS.map(l => `<div class="level"><h3>${h(l.name)}</h3><span style="color:var(--muted);font-size:15px">${h(l.sub)} · <span style="font-family:var(--mono)">+1</span> if covered</span>
     <div class="opts">${l.opts.map((o, oi) => `<button class="toggle" data-act="plan" data-t="${t}" data-l="${l.id}" data-o="${oi}" ${pressed((plan[l.id] || []).includes(oi))}>${h(o)}</button>`).join("")}</div></div>`).join("")}</div>
   <label for="own${t}" style="display:grid;gap:6px"><span class="label">Our own commitment: who, what, by when</span>
     <textarea id="own${t}" data-own="${t}" placeholder="e.g. Charge nurse adds a two-minute “How are we really?” round to the 07:30 huddle, starting Monday, reviewed after 4 weeks.">${h(R.own[t] || "")}</textarea></label>
   <div class="row"><button class="toggle" data-act="owner" data-t="${t}" ${pressed(R.owner[t])}>Names an owner and a date <span class="pts">+2</span></button></div>
-  <section style="display:grid;gap:10px"><div class="row spread"><span class="label">All plans</span><span id="copyplans"><button class="btn small" data-act="copy">Copy all plans</button></span></div>
+  <section style="display:grid;gap:10px"><div class="row spread"><span class="label">${solo() ? "Your plan" : "All plans"}</span><span id="copyplans"><button class="btn small" data-act="copy">${solo() ? "Copy my plan" : "Copy all plans"}</button></span></div>
     <div class="plans">${S.teams.map((n, k) => planCard(n, k)).join("")}</div></section>
   <div class="nav"><span></span><button class="btn primary" data-act="complete" data-s="restore">Complete Restore and collect the final key</button></div>`;
 }
@@ -542,9 +586,9 @@ function vDebrief() {
   const got = STAGES.filter(s => S.keys[s.id]).length;
   return `<div class="stagehead"><span class="label">Mission debrief · ${got} of 4 keys collected</span><h2>${got === 4 ? "Team restored" : "Mission in progress"}</h2></div>
   <div class="keys">${STAGES.map(s => keySvg(S.keys[s.id])).join("")}</div>
-  <section style="display:grid;gap:8px"><span class="label">Final standings</span>
+  ${solo() ? `<section style="display:grid;gap:8px"><span class="label">Your score</span><div class="timer">${sc[0]} <span style="font-size:24px;color:var(--muted)">of ${maxScore()}</span></div></section>` : `<section style="display:grid;gap:8px"><span class="label">Final standings</span>
     ${order.map((o, k) => `<div class="score${k === 0 ? " lead" : ""}"><span class="nm">${k + 1}. ${h(o.n)}</span><span></span><span class="pts">${o.s}</span></div>`).join("")}
-  </section>
+  </section>`}
   <section style="display:grid;gap:10px"><span class="label">Take these back to your ward</span>
   <ul class="msgs">
     <li>Silent burnout hides behind good performance.</li>
@@ -565,16 +609,23 @@ function vTrack() {
 function vBoard() {
   const sc = scores(), max = Math.max(...sc);
   const got = STAGES.filter(s => S.keys[s.id]).length;
+  if (solo()) return `<div class="panel"><span class="label">${h(S.teams[0])}'s score</span><div class="timer">${sc[0]} <span style="font-size:20px;color:var(--muted)">of ${maxScore()}</span></div></div>
+  ${timerPanel()}${keysPanel(got)}`;
   return `<div class="panel"><span class="label">Scoreboard</span>
     <div>${S.teams.map((n, t) => `<div class="score${max > 0 && sc[t] === max ? " lead" : ""}"><span class="nm">${h(n)}</span>
       <span class="adj"><button data-act="adj" data-t="${t}" data-d="-1" aria-label="Take a point from ${h(n)}">−</button><button data-act="adj" data-t="${t}" data-d="1" aria-label="Give ${h(n)} a bonus point">+</button></span>
       <span class="pts">${sc[t]}</span></div>`).join("")}</div>
   </div>
-  <div class="panel"><span class="label">Round timer</span>
+  ${timerPanel()}${keysPanel(got)}`;
+}
+function timerPanel() {
+  return `<div class="panel"><span class="label">Round timer</span>
     <div class="timer${timer.left <= 10 && timer.left > 0 ? " low" : ""}" id="timer">${fmt(timer.left)}</div>
     <div class="row"><button class="btn small" data-act="timerToggle">${timer.running ? "Pause" : timer.left === 0 ? "Restart" : "Start"}</button><button class="btn small" data-act="timerReset">Reset</button></div>
-  </div>
-  <div class="panel"><span class="label">Sustainability keys · ${got} of 4</span><div class="keys">${STAGES.map(s => keySvg(S.keys[s.id])).join("")}</div></div>`;
+  </div>`;
+}
+function keysPanel(got) {
+  return `<div class="panel"><span class="label">Sustainability keys · ${got} of 4</span><div class="keys">${STAGES.map(s => keySvg(S.keys[s.id])).join("")}</div></div>`;
 }
 
 function vModal() {
@@ -594,6 +645,9 @@ function render() {
   document.getElementById("main").innerHTML = VIEWS[S.stage]();
   document.getElementById("board").innerHTML = vBoard();
   document.getElementById("overlay").innerHTML = vModal();
+  document.getElementById("footnote").textContent = solo()
+    ? "Solo mode. Each answer stays hidden until you make your own call."
+    : "Facilitator view. Answers stay hidden until you press Reveal, so this screen is safe to project.";
   document.getElementById("resetbox").innerHTML = resetAsk
     ? `<span class="row"><span>Clear all scores and answers?</span><button class="btn small" data-act="resetYes">Reset</button><button class="btn small" data-act="resetNo">Cancel</button></span>`
     : `<button class="btn small" data-act="resetAsk">Reset game</button>`;
@@ -622,6 +676,16 @@ const ACT = {
   },
   timerDur: e => { S.timerDur = +e.n; if (!timer.running) timer.left = S.timerDur; },
   reveal: () => { S.detect.revealed[S.detect.i] = true; },
+  dpick: e => { S.detect.pick = S.detect.pick || {}; S.detect.pick[S.detect.i] = e.v; },
+  mode: e => {
+    if (S.mode === e.m) return;
+    // Switching modes starts a fresh game, but remembers names typed for either mode.
+    const teamNames = solo() ? S.teamNames : S.teams.slice(), player = solo() ? S.teams[0] : (S.player || "You");
+    const dur = S.timerDur;
+    S = fresh(teamNames ? teamNames.length : 3);
+    Object.assign(S, { mode: e.m, teamNames, player, timerDur: dur });
+    if (e.m === "solo") { S.teams = [player]; S.adj = [0]; } else if (teamNames) S.teams = teamNames.slice();
+  },
   award: e => { const a = nest(S.detect.awards, S.detect.i, e.t); a[e.k] = !a[e.k]; },
   detectStep: e => { S.detect.i = Math.max(0, Math.min(SCENARIOS.length - 1, S.detect.i + +e.d)); resetTimer(); },
   vote: e => { const v = (S.connect.votes[e.c] = S.connect.votes[e.c] || {}); v[e.t] = v[e.t] === e.v ? undefined : e.v; },
@@ -654,7 +718,11 @@ const ACT = {
   timerReset: () => { resetTimer(); boardOnly(); return "noRender"; },
   resetAsk: () => { resetAsk = true; },
   resetNo: () => { resetAsk = false; },
-  resetYes: () => { S = fresh(S.teams.length); resetAsk = false; modal = null; resetTimer(); }
+  resetYes: () => {
+    const keep = { mode: S.mode, teams: S.teams.slice(), teamNames: S.teamNames, player: S.player, timerDur: S.timerDur };
+    S = Object.assign(fresh(S.teams.length), keep, { adj: keep.teams.map(() => 0) });
+    resetAsk = false; modal = null; resetTimer();
+  }
 };
 function resetTimer() { clearInterval(timer.id); timer.running = false; timer.left = S.timerDur; }
 
@@ -665,10 +733,11 @@ document.addEventListener("click", ev => {
 });
 document.addEventListener("change", ev => {
   const t = ev.target;
-  if (t.dataset.team !== undefined) { S.teams[+t.dataset.team] = t.value.trim() || `Team ${+t.dataset.team + 1}`; render(); }
+  if (t.dataset.team !== undefined) { S.teams[+t.dataset.team] = t.value.trim() || (solo() ? "You" : `Team ${+t.dataset.team + 1}`); render(); }
 });
 document.addEventListener("input", ev => {
   const t = ev.target;
+  if (t.dataset.note !== undefined) { S.notes[t.dataset.note] = t.value; save(); return; }
   if (t.dataset.own !== undefined) {
     S.restore.own[+t.dataset.own] = t.value; save();
     const plans = document.querySelector(".plans"); if (plans) plans.innerHTML = S.teams.map((n, k) => planCard(n, k)).join("");
@@ -718,6 +787,7 @@ function startEcg() {
 function start(data) {
   const saved = (data && data.state) || load();
   if (saved) S = Object.assign(fresh(saved.teams.length), saved);
+  S.notes = S.notes || {}; S.detect.pick = S.detect.pick || {};
   timer.left = S.timerDur;
   render();
 }

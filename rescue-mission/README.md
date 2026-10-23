@@ -2,6 +2,13 @@
 
 A facilitator-led game for the *Silent Burnout in Healthcare Teams* training of trainers (TOT) workshop. Project `index.html` on the room screen. The facilitator runs the game and records each team's answers. Participants use green, amber and red cards (or tokens).
 
+## Two ways to play
+
+- **Teams:** 2–4 teams in the room, with one shared screen run by the facilitator. This is the workshop mode described below.
+- **Solo:** one person plays on their own device at their own pace, for pre-work, catch-up or self-study. The player commits to an answer (and can jot down notes) before each reveal. Triage calls, Investigate/Ignore/Intervene choices and statement classifications are scored automatically; the open-ended parts (hidden signs, responses, rewrites, the ripple map) are self-checked against the expert read. The score is shown out of 67.
+
+Choose the mode on the briefing screen. Switching modes starts a fresh game.
+
 It's a single file with no build step. Open `index.html` in a browser, or host the folder on any static host (for example, GitHub Pages). Game state is saved in the browser, so a page refresh doesn't lose scores. Use **Reset game** to start over.
 
 ## Mission structure
