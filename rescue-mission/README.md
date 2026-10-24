@@ -9,6 +9,10 @@ A facilitator-led game for the *Silent Burnout in Healthcare Teams* training of 
 
 Choose the mode on the briefing screen. Switching modes starts a fresh game.
 
+## English and Arabic
+
+The **العربية / English** button in the top bar switches the whole game between English and Arabic, including all cases, clues, statements and plan options. Arabic uses a right-to-left layout and Arabic fonts. You can switch at any point without losing scores. To open the game straight in Arabic, add `#ar` to the link (for example `…/rescue-mission/#ar`).
+
 It's a single file with no build step. Open `index.html` in a browser, or host the folder on any static host (for example, GitHub Pages). Game state is saved in the browser, so a page refresh doesn't lose scores. Use **Reset game** to start over.
 
 ## Mission structure
@@ -44,4 +48,4 @@ The game builds recognition and peer-response skills. It isn't a diagnostic tool
 
 ## Editing content
 
-All cases, clues, statements and plan options are plain data at the top of the `<script>` block in `index.html` (`SCENARIOS`, `CASE`, `IMPACTS`, `STATEMENTS`, `LEVELS`). Edit the text there to adapt the game to your audience or local terminology.
+All cases, clues, statements and plan options are plain data at the top of the `<script>` block in `index.html`: the `EN` and `AR` objects hold the English and Arabic content with the same structure, and `AR_UI` holds the Arabic interface text. When you add or change a case, change it in both `EN` and `AR` and keep the answers (`answer`, `rec`, `a`) the same. Edit the text there to adapt the game to your audience or local terminology.

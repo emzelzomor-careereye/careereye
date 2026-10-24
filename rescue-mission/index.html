@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@600;800&family=Cairo:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;700&display=swap">
 <style>
 /* Layout: a ward "status board". Mission track across the top, the active challenge in the main panel,
    a fixed scoreboard + timer rail on the right that stacks under the challenge on narrow screens. */
@@ -111,7 +111,7 @@ button.tri[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5p
 .reveal { display: grid; gap: 16px; border-top: 2px dashed var(--line); padding-top: 20px; }
 .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
 .cols > div { display: grid; gap: 6px; align-content: start; min-width: 0; }
-.cols ul { margin: 0; padding-left: 20px; }
+.cols ul { margin: 0; padding-inline-start: 20px; }
 .hidden-note { color: var(--muted); font-style: italic; }
 
 /* Team scoring cards */
@@ -162,7 +162,7 @@ aside { display: grid; gap: 16px; position: sticky; top: calc(env(safe-area-inse
 .score { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .score:last-child { border-bottom: 0; }
 .score .nm { font-weight: 700; overflow-wrap: anywhere; }
-.score .pts { font-family: var(--mono); font-weight: 600; font-size: 28px; font-variant-numeric: tabular-nums; min-width: 2.5ch; text-align: right; }
+.score .pts { font-family: var(--mono); font-weight: 600; font-size: 28px; font-variant-numeric: tabular-nums; min-width: 2.5ch; text-align: end; }
 .score.lead .nm::after { content: " ▲"; color: var(--key); font-size: 13px; }
 .adj { display: flex; gap: 4px; }
 .adj button { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; font-family: var(--mono); }
@@ -184,7 +184,7 @@ aside { display: grid; gap: 16px; position: sticky; top: calc(env(safe-area-inse
 .steps .s { font-family: var(--display); font-weight: 800; font-size: 28px; text-transform: uppercase; }
 .setup { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
 .setup label { display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
-.safety { border-left: 4px solid var(--amber); background: var(--amber-bg); padding: 12px 16px; border-radius: 0 10px 10px 0; max-width: 80ch; }
+.safety { border-inline-start: 4px solid var(--amber); background: var(--amber-bg); padding: 12px 16px; border-start-end-radius: 10px; border-end-end-radius: 10px; max-width: 80ch; }
 .msgs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; list-style: none; padding: 0; margin: 0; }
 .msgs li { background: var(--paper); border-radius: 12px; padding: 16px; font-weight: 700; font-size: 18px; }
 
@@ -195,13 +195,27 @@ aside { display: grid; gap: 16px; position: sticky; top: calc(env(safe-area-inse
 .modal h3 { font-size: 44px; text-transform: uppercase; }
 @keyframes turn { from { transform: rotate(-90deg) scale(.6); opacity: .2; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .modal .keyicon { animation: none; } }
+/* Arabic: right-to-left with Arabic faces. Uppercase tracking doesn't apply to Arabic script. */
+:root[dir="rtl"] { --display: "Cairo", "Big Shoulders Display", sans-serif; --body: "IBM Plex Sans Arabic", "Atkinson Hyperlegible", system-ui, sans-serif; }
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3 { line-height: 1.3; letter-spacing: 0; }
+[dir="rtl"] .label { font-family: var(--body); font-weight: 700; font-size: 13px; letter-spacing: 0; }
+[dir="rtl"] .track button { font-size: 16px; letter-spacing: 0; }
+[dir="rtl"] .brand h1 { font-size: 26px; }
+[dir="rtl"] .stagehead h2 { font-size: clamp(32px, 4.6vw, 54px); }
+[dir="rtl"] .hero h2 { font-size: clamp(34px, 5vw, 66px); }
+[dir="rtl"] .steps .s, [dir="rtl"] .case .who { font-size: 24px; }
+[dir="rtl"] .signal p { font-size: clamp(26px, 4vw, 44px); line-height: 1.4; }
+[dir="rtl"] .quote { line-height: 1.6; }
+/* Keep scores like +1 reading left to right inside Arabic text. */
+.pts, .tname .mono { direction: ltr; unicode-bidi: isolate; }
+.langbtn { font-family: "IBM Plex Sans Arabic", "Atkinson Hyperlegible", system-ui, sans-serif; }
 footer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; color: var(--muted); font-size: 14px; }
 </style>
 
 <div class="wrap">
   <header class="top">
-    <div class="brand"><h1>Team Rescue Mission</h1><span class="label">Silent Burnout in Healthcare Teams</span></div>
-    <ol class="track" id="track"></ol>
+    <div class="brand"><h1 id="brandname">Team Rescue Mission</h1><span class="label" id="brandsub">Silent Burnout in Healthcare Teams</span></div>
+    <div class="row"><ol class="track" id="track"></ol><button class="btn small langbtn" data-act="lang" id="langbtn" lang="ar">العربية</button></div>
   </header>
   <div class="grid">
     <main id="main" aria-live="polite"></main>
@@ -215,142 +229,411 @@ footer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-betwe
 <div id="overlay"></div>
 
 <script>
-/* ---------- Content ---------- */
-const STAGES = [
-  { id: "detect", name: "Detect", game: "Spot the Silent Burnout", goal: "Find the hidden signals" },
-  { id: "connect", name: "Connect", game: "The Burnout Detective", goal: "Understand the team impact" },
-  { id: "respond", name: "Respond", game: "Say This, Not That", goal: "Handle the conversation" },
-  { id: "restore", name: "Restore", game: "Sustainability Plan", goal: "Build the team's plan" }
-];
-
-const TRIAGE = {
-  green: "Normal work stress",
-  amber: "Warning sign",
-  red: "Possible silent burnout"
+/* ---------- Content ----------
+   Each language has the same shape. Structural fields (answer, rec, a, id) must match across languages. */
+const EN = {
+  STAGES: [
+    { id: "detect", name: "Detect", game: "Spot the Silent Burnout", goal: "Find the hidden signals" },
+    { id: "connect", name: "Connect", game: "The Burnout Detective", goal: "Understand the team impact" },
+    { id: "respond", name: "Respond", game: "Say This, Not That", goal: "Handle the conversation" },
+    { id: "restore", name: "Restore", game: "Sustainability Plan", goal: "Build the team's plan" }
+  ],
+  TRIAGE: { green: "Normal work stress", amber: "Warning sign", red: "Possible silent burnout" },
+  SCENARIOS: [
+    {
+      who: "Dr. Amira H.", role: "Emergency physician, 6 years", answer: "red",
+      text: "Amira still comes to every shift and completes all tasks on time. But she has stopped joining team discussions, avoids colleagues, rarely speaks about patients beyond what is necessary, and recently said: “I don't really care anymore. I just want to finish my shift.”",
+      signals: ["Withdrawal from team discussions", "Avoiding colleagues", "Emotional distance from patients", "Says she no longer cares"],
+      beneath: "Her performance is intact, which is exactly why this is silent. Exhaustion and cynicism may be well established, and detaching from patients and colleagues may be how she is protecting herself.",
+      response: "A private, unhurried check-in that names what you noticed without judging it. Listen more than you talk, ask what would help, offer something concrete (a shift swap, a debrief, occupational health or the employee assistance programme), and follow up within a week. A team leader should also look at her recent workload and critical incidents."
+    },
+    {
+      who: "Nurse Jonah P.", role: "Medical ward nurse, 4 years", answer: "green",
+      text: "Jonah had a brutal week: two rapid-response calls and a patient death on Thursday. He was short-tempered on Friday and told the huddle he was wiped out. After his weekend off he is back to his usual self, joking with the team and asking how the patient's family is doing.",
+      signals: ["Clear trigger: a hard week and a death", "Said openly how he felt", "Recovered after rest", "Still connected and caring"],
+      beneath: "A normal stress response to a heavy week. The key sign is recovery: rest worked, and his connection to patients and colleagues is intact.",
+      response: "Acknowledge the hard week. A short post-event debrief would still help the whole team. Watch only if the pattern starts repeating without recovery."
+    },
+    {
+      who: "Lena M.", role: "Hospital pharmacist, 8 years", answer: "amber",
+      text: "For three weeks Lena has stayed about 90 minutes late every day. She eats lunch at her desk or not at all, and double-checks her own verifications. When asked, she says: “It's fine, I'll catch up once things calm down.” Things have not calmed down.",
+      signals: ["Weeks of sustained overtime", "Skipped breaks", "Checking her own work twice", "Minimising: “it's fine”"],
+      beneath: "Depletion is building, and anxiety about making an error may be driving the overwork. This is a workload problem that she is trying to solve alone.",
+      response: "Name the pattern kindly and ask about workload. Involve the lead to look at staffing and the queue, protect her breaks, and check in again in two weeks."
+    },
+    {
+      who: "Daniel R.", role: "ICU charge nurse, 12 years", answer: "red",
+      text: "Daniel volunteers for every extra shift and hasn't taken annual leave in over a year. Lately his humour has turned: he calls patients “bed 7” or “another frequent flyer” and rolls his eyes at families. He has taken four single sick days this quarter for “headaches”.",
+      signals: ["No recovery time for over a year", "Depersonalising language about patients", "Cynicism toward families", "Repeated short-notice sick days"],
+      beneath: "He is running on empty. Overcommitment can be a warning sign, not a strength, and dark humour can be detachment used as self-protection.",
+      response: "A private conversation focused on him, not a reprimand about the jokes. A leader should make sure leave is taken and cap extra shifts, and offer occupational health. Address the language as well, because cynicism spreads through a team."
+    },
+    {
+      who: "Dr. Priya S.", role: "Second-year resident", answer: "green",
+      text: "It is board-exam season. Priya is anxious and was tearful after a hard night. She talks openly with peers about the pressure, asked her chief resident for a schedule swap so she can study, and still lights up when she teaches medical students.",
+      signals: ["Time-limited stressor", "Open about how she feels", "Asked for help", "Still finds meaning in the work"],
+      beneath: "High stress, but strong protective factors: connection, help-seeking and meaning. This looks like a hard season, not burnout.",
+      response: "Support the swap and normalise the stress. Check in after the exam, and watch for stress that doesn't lift once it's over."
+    },
+    {
+      who: "Marco T.", role: "Outpatient physiotherapist, 10 years", answer: "amber",
+      text: "Marco used to volunteer to mentor students; this term he said no. In meetings he says: “What's the point? Nothing ever changes here.” His patient outcomes and notes are still good, and he still has lunch with his close colleague.",
+      signals: ["Pulling back from roles he valued", "Growing cynicism about the organisation", "Performance still intact", "Still connected to one colleague"],
+      beneath: "Early cynicism, possibly from feeling unheard. The one strong friendship is a protective factor worth noticing.",
+      response: "Ask him what he would change if he could, and act on at least one concern so he sees that something does change. His colleague can check in informally."
+    },
+    {
+      who: "Grace A.", role: "Senior midwife, 15 years", answer: "red",
+      text: "Grace's documentation is flawless and nobody has a complaint about her. But colleagues have noticed that she sits in her car for 20 minutes before every shift, no longer eats in the staff room, and last week she said quietly: “I feel numb when babies are born now.”",
+      signals: ["Dread before every shift", "Isolating from colleagues", "Numbness toward the most meaningful part of the job", "Competence hides it all"],
+      beneath: "Emotional exhaustion and loss of meaning, hidden behind excellent work. Accumulated trauma from difficult births may be part of it.",
+      response: "A gentle private check-in that reflects back what she said. Ask openly how she has been and offer support routes: peer support, occupational health, psychological support. If she hints at hopelessness, ask directly about her safety."
+    }
+  ],
+  CASE: {
+    who: "Sam Okafor", role: "ICU nurse, 9 years",
+    intro: "Colleagues describe Sam as “the one you want on a bad night.” Over the next few weeks, you notice some things.",
+    clues: [
+      { t: "Increased irritability", d: "Sam snapped at a junior nurse over a delayed medication and at a resident during rounds. Two colleagues mention it in passing.",
+        rec: ["investigate"], note: "One sign is a data point, not a pattern. Notice it and look for more. A quick “You seemed rushed today, all OK?” costs nothing." },
+      { t: "Still performing well", d: "No incidents, clean audits, and families keep praising Sam.",
+        rec: ["investigate"], note: "This is the clue that makes burnout silent. Good performance is not evidence that someone is fine. Many teams stop looking here." },
+      { t: "Stops taking breaks", d: "Sam has worked through every break for two weeks and says, “I'm faster if I just keep going.”",
+        rec: ["investigate", "intervene"], note: "Recovery is disappearing. Keep investigating, or start the conversation now. Both are reasonable. Ignoring it isn't." },
+      { t: "Withdraws from colleagues", d: "Sam skips the team breakfast after night shifts, eats alone and answers messages with one word.",
+        rec: ["intervene"], note: "Now there is a pattern: irritability, overwork and withdrawal. Move from watching to a private, caring conversation." },
+      { t: "“I don't feel anything about the job anymore.”", d: "Sam says it quietly to you during handover.",
+        rec: ["intervene"], note: "Sam has described emotional detachment in their own words. Respond now: thank Sam for telling you, ask more, and offer support. Don't wait for performance to drop." }
+    ]
+  },
+  VOTES: [["investigate", "Investigate"], ["ignore", "Ignore"], ["intervene", "Intervene"]],
+  IMPACTS: [
+    "Colleagues quietly absorb extra work",
+    "Handovers get thinner and less safe",
+    "Junior staff stop asking questions",
+    "Cynicism spreads through the team",
+    "Patients and families feel less cared for",
+    "Risk of errors and near-misses rises",
+    "More sick leave and last-minute gaps in the rota",
+    "A good clinician leaves the profession"
+  ],
+  STATEMENTS: [
+    { s: "Everyone is tired. You just need a vacation.", a: "unhelpful",
+      why: "It minimises what they feel and offers a quick fix that closes the conversation.",
+      better: "“It sounds like this has been building for a while. What's been the hardest part?”" },
+    { s: "I've noticed you've seemed more withdrawn lately. Do you want to talk about how things have been going?", a: "helpful",
+      why: "It names a specific observation without judging it, and leaves the choice with them." },
+    { s: "Honestly, if you can't handle the pressure, maybe this isn't the job for you.", a: "harmful",
+      why: "It blames and shames, and it teaches the whole team that struggling must be hidden.",
+      better: "“This job puts a lot of pressure on all of us. You don't have to carry it alone. What would help right now?”" },
+    { s: "You're one of the strongest people here. You'll be fine.", a: "unhelpful",
+      why: "It's well meant, but it tells them they have to stay strong and makes it harder to admit they're not fine.",
+      better: "“You carry a lot for this team. Who's looking out for you at the moment?”" },
+    { s: "I can't fix everything, but I'm here. What would help this week: a swap, a proper break, or just someone to talk to?", a: "helpful",
+      why: "It's honest, offers concrete options and lets them choose." },
+    { s: "I'll let the manager know you're struggling.", a: "harmful",
+      why: "Going over their head without consent breaks trust. (If you are worried about their safety, you do need to escalate, but tell them you're doing it and why.)",
+      better: "“Would it help if we spoke to the manager together about your workload? I can come with you.”" },
+    { s: "Have you tried yoga or mindfulness?", a: "unhelpful",
+      why: "Unasked-for advice turns a workplace problem into a personal one and skips the listening.",
+      better: "“What usually helps you recover? And is there anything about the work itself we could change?”" },
+    { s: "That sounds really heavy. Thank you for telling me.", a: "helpful",
+      why: "It validates the feeling and rewards them for speaking up." },
+    { s: "Don't let anyone see you like this. It looks unprofessional.", a: "harmful",
+      why: "It teaches concealment, which is how burnout becomes silent in the first place.",
+      better: "“Let's find somewhere quiet for a few minutes. Take the time you need.”" }
+  ],
+  CLASSES: [["helpful", "Helpful"], ["unhelpful", "Unhelpful"], ["harmful", "Potentially harmful"]],
+  LEVELS: [
+    { id: "me", name: "Me", sub: "What each of us will do", opts: ["Protect recovery between shifts", "Know my own early warning signs", "Pick a peer-support partner", "Set a limit on extra shifts", "Actually use my annual leave"] },
+    { id: "us", name: "Us", sub: "What our team will do", opts: ["Ask “How are we really?” at huddle", "Cover each other's breaks", "Debrief after critical incidents", "Buddy new and returning staff", "Make it normal to say “I'm not OK”"] },
+    { id: "system", name: "System", sub: "What we'll ask leadership for", opts: ["Review workload when sick leave rises", "Fair rota and leave approval", "Easy access to occupational health and EAP", "Leaders visibly take breaks and leave", "Specific, regular recognition"] }
+  ],
+  AWARDS: [["id", "Correct call", 1], ["hidden", "Hidden sign", 1], ["resp", "Good response", 2], ["bonus", "Spotted what others missed", 1]],
+  TEAMS: ["Team Triage", "Team Pulse", "Team Handover", "Team Rounds"],
+  PLAYER: "You"
 };
 
-const SCENARIOS = [
-  {
-    who: "Dr. Amira H.", role: "Emergency physician, 6 years", answer: "red",
-    text: "Amira still comes to every shift and completes all tasks on time. But she has stopped joining team discussions, avoids colleagues, rarely speaks about patients beyond what is necessary, and recently said: “I don't really care anymore. I just want to finish my shift.”",
-    signals: ["Withdrawal from team discussions", "Avoiding colleagues", "Emotional distance from patients", "Says she no longer cares"],
-    beneath: "Her performance is intact, which is exactly why this is silent. Exhaustion and cynicism may be well established, and detaching from patients and colleagues may be how she is protecting herself.",
-    response: "A private, unhurried check-in that names what you noticed without judging it. Listen more than you talk, ask what would help, offer something concrete (a shift swap, a debrief, occupational health or the employee assistance programme), and follow up within a week. A team leader should also look at her recent workload and critical incidents."
+const AR = {
+  STAGES: [
+    { id: "detect", name: "الرصد", game: "اكتشف الاحتراق الصامت", goal: "اعثر على الإشارات الخفية" },
+    { id: "connect", name: "الربط", game: "محقق الاحتراق الوظيفي", goal: "افهم الأثر على الفريق" },
+    { id: "respond", name: "الاستجابة", game: "قل هذا، لا ذاك", goal: "أدِر المحادثة" },
+    { id: "restore", name: "الاستعادة", game: "خطة الاستدامة", goal: "ابنِ خطة الفريق" }
+  ],
+  TRIAGE: { green: "ضغط عمل طبيعي", amber: "علامة تحذير", red: "احتراق صامت محتمل" },
+  SCENARIOS: [
+    {
+      who: "د. أميرة ح.", role: "طبيبة طوارئ، 6 سنوات", answer: "red",
+      text: "ما زالت أميرة تحضر كل مناوبة وتُنجز جميع مهامها في وقتها. لكنها توقفت عن المشاركة في نقاشات الفريق، وتتجنب زملاءها، ونادرًا ما تتحدث عن المرضى إلا بقدر الضرورة، وقالت مؤخرًا: «لم أعد أهتم حقًا. أريد فقط أن تنتهي مناوبتي.»",
+      signals: ["الانسحاب من نقاشات الفريق", "تجنّب الزملاء", "تباعد عاطفي عن المرضى", "تقول إنها لم تعد تهتم"],
+      beneath: "أداؤها سليم، وهذا تحديدًا ما يجعل الأمر صامتًا. قد يكون الإنهاك والتشاؤم قد ترسّخا لديها، وقد يكون ابتعادها عن المرضى والزملاء طريقتها في حماية نفسها.",
+      response: "حديث خاص وهادئ تذكر فيه ما لاحظته دون إصدار أحكام. استمع أكثر مما تتكلم، واسألها عمّا قد يساعدها، وقدّم شيئًا ملموسًا (تبديل مناوبة، جلسة مراجعة، الصحة المهنية أو برنامج مساعدة الموظفين)، وتابع معها خلال أسبوع. وعلى قائد الفريق أيضًا مراجعة عبء عملها الأخير والحوادث الحرجة التي مرّت بها."
+    },
+    {
+      who: "الممرض يونس ب.", role: "ممرض في قسم الباطنة، 4 سنوات", answer: "green",
+      text: "مرّ يونس بأسبوع قاسٍ: نداءا استجابة سريعة ووفاة مريض في منتصف الأسبوع. كان سريع الانفعال في اليوم التالي، وأخبر الفريق في الاجتماع الصباحي أنه منهك تمامًا. وبعد يومَي راحة عاد إلى طبيعته، يمازح الفريق ويسأل عن حال عائلة المريض.",
+      signals: ["سبب واضح: أسبوع صعب ووفاة مريض", "عبّر بصراحة عن شعوره", "تعافى بعد الراحة", "ما زال متواصلًا ومهتمًا"],
+      beneath: "استجابة طبيعية للضغط بعد أسبوع ثقيل. العلامة الأهم هي التعافي: الراحة نجحت، وصلته بالمرضى والزملاء ما زالت قائمة.",
+      response: "اعترف بصعوبة الأسبوع. جلسة مراجعة قصيرة بعد الحدث ستفيد الفريق كله. راقب فقط إذا بدأ النمط يتكرر دون تعافٍ."
+    },
+    {
+      who: "لينا م.", role: "صيدلانية في مستشفى، 8 سنوات", answer: "amber",
+      text: "منذ ثلاثة أسابيع تبقى لينا نحو 90 دقيقة بعد انتهاء دوامها كل يوم. تتناول غداءها على مكتبها أو لا تتناوله أصلًا، وتراجع عملها مرتين. وعندما سُئلت قالت: «لا بأس، سألحق بالعمل عندما تهدأ الأمور.» لكن الأمور لم تهدأ.",
+      signals: ["ساعات عمل إضافية لأسابيع متواصلة", "تخطّي فترات الراحة", "مراجعة عملها مرتين", "التهوين: «لا بأس»"],
+      beneath: "الاستنزاف يتراكم، وقد يكون القلق من ارتكاب خطأ هو ما يدفعها إلى هذا الإجهاد. إنها مشكلة عبء عمل تحاول حلّها وحدها.",
+      response: "سمِّ النمط بلطف واسألها عن عبء العمل. أشرك المسؤول لمراجعة التوظيف وحجم الطلبات، واحمِ فترات راحتها، وتابع معها بعد أسبوعين."
+    },
+    {
+      who: "دانيال ر.", role: "رئيس تمريض العناية المركزة، 12 سنة", answer: "red",
+      text: "يتطوع دانيال لكل مناوبة إضافية، ولم يأخذ إجازته السنوية منذ أكثر من عام. وفي الآونة الأخيرة تغيّرت دعابته: يسمّي المرضى «سرير 7» أو «زبون دائم آخر»، ويتأفف من العائلات. وقد أخذ أربعة أيام إجازة مرضية متفرقة هذا الربع بسبب «الصداع».",
+      signals: ["لا وقت للتعافي منذ أكثر من عام", "لغة تُجرّد المرضى من إنسانيتهم", "تشاؤم تجاه العائلات", "إجازات مرضية متكررة دون إشعار مسبق"],
+      beneath: "إنه يعمل بلا وقود. الإفراط في الالتزام قد يكون علامة تحذير لا علامة قوة، والدعابة السوداء قد تكون انفصالًا يحمي به نفسه.",
+      response: "حديث خاص يركّز عليه هو، لا توبيخ على النكات. على القائد أن يتأكد من أخذه إجازته وأن يضع حدًا للمناوبات الإضافية، وأن يعرض عليه خدمات الصحة المهنية. وتعامل مع اللغة أيضًا، لأن التشاؤم ينتشر في الفريق."
+    },
+    {
+      who: "د. بريا س.", role: "طبيبة مقيمة في السنة الثانية", answer: "green",
+      text: "إنه موسم امتحانات البورد. بريا قلقة، وبكت بعد ليلة صعبة. تتحدث بصراحة مع زملائها عن الضغط، وطلبت من كبير المقيمين تبديل جدولها لتتمكن من المذاكرة، وما زالت تتألق عندما تُدرّس طلاب الطب.",
+      signals: ["مصدر ضغط محدود بوقت", "منفتحة بشأن مشاعرها", "طلبت المساعدة", "ما زالت تجد معنى في العمل"],
+      beneath: "ضغط مرتفع، لكن عوامل الحماية قوية: التواصل وطلب المساعدة والمعنى. يبدو هذا موسمًا صعبًا لا احتراقًا.",
+      response: "ادعم التبديل وتعامل مع الضغط بوصفه أمرًا طبيعيًا. تابع معها بعد الامتحان، وانتبه إن لم يخفّ الضغط بعد انتهائه."
+    },
+    {
+      who: "ماركو ت.", role: "أخصائي علاج طبيعي في العيادات الخارجية، 10 سنوات", answer: "amber",
+      text: "اعتاد ماركو التطوع لإرشاد الطلاب، لكنه رفض هذا الفصل. وفي الاجتماعات يقول: «ما الفائدة؟ لا شيء يتغير هنا أبدًا.» ما زالت نتائج مرضاه وملاحظاته جيدة، وما زال يتناول الغداء مع زميله المقرّب.",
+      signals: ["التراجع عن أدوار كان يقدّرها", "تشاؤم متزايد تجاه المؤسسة", "الأداء ما زال سليمًا", "ما زال على صلة بزميل واحد"],
+      beneath: "بداية تشاؤم، ربما بسبب الشعور بأن صوته غير مسموع. صداقته القوية الوحيدة عامل حماية يستحق الانتباه.",
+      response: "اسأله عمّا كان سيغيّره لو استطاع، وتصرّف حيال واحد من مخاوفه على الأقل ليرى أن شيئًا ما يتغير فعلًا. ويمكن لزميله أن يطمئن عليه بشكل غير رسمي."
+    },
+    {
+      who: "غريس أ.", role: "قابلة أولى، 15 سنة", answer: "red",
+      text: "توثيق غريس لا تشوبه شائبة، ولا أحد يشتكي منها. لكن زملاءها لاحظوا أنها تجلس في سيارتها 20 دقيقة قبل كل مناوبة، ولم تعد تأكل في غرفة الموظفين، وقالت بهدوء الأسبوع الماضي: «أشعر بالخدر عندما يولد الأطفال الآن.»",
+      signals: ["رهبة قبل كل مناوبة", "عزلة عن الزملاء", "خدر تجاه أكثر جوانب عملها معنى", "كفاءتها تخفي كل شيء"],
+      beneath: "إنهاك عاطفي وفقدان للمعنى، مختبئان خلف عمل ممتاز. وقد تكون الصدمات المتراكمة من الولادات الصعبة جزءًا من ذلك.",
+      response: "حديث خاص لطيف تعكس فيه ما قالته. اسألها بانفتاح عن حالها، واعرض عليها مسارات الدعم: دعم الأقران، الصحة المهنية، الدعم النفسي. وإن ألمحت إلى اليأس، فاسألها مباشرة عن سلامتها."
+    }
+  ],
+  CASE: {
+    who: "سام أوكافور", role: "ممرض عناية مركزة، 9 سنوات",
+    intro: "يصف الزملاء سام بأنه «الشخص الذي تريده بجانبك في ليلة صعبة». وخلال الأسابيع القليلة القادمة، تلاحظ بعض الأمور.",
+    clues: [
+      { t: "تزايد سرعة الانفعال", d: "انفعل سام على ممرضة مبتدئة بسبب تأخر دواء، وعلى طبيب مقيم أثناء الجولة. ذكر زميلان ذلك عرضًا.",
+        rec: ["investigate"], note: "علامة واحدة معلومة، لا نمط. لاحظها وابحث عن المزيد. سؤال سريع مثل «بدوت مستعجلًا اليوم، هل كل شيء بخير؟» لا يكلّف شيئًا." },
+      { t: "ما زال أداؤه جيدًا", d: "لا حوادث، والتدقيقات سليمة، والعائلات ما زالت تثني على سام.",
+        rec: ["investigate"], note: "هذا هو الدليل الذي يجعل الاحتراق صامتًا. الأداء الجيد ليس دليلًا على أن الشخص بخير. كثير من الفرق يتوقفون عن البحث هنا." },
+      { t: "توقّف عن أخذ فترات الراحة", d: "عمل سام طوال فترات راحته لأسبوعين، ويقول: «أكون أسرع إذا واصلت العمل.»",
+        rec: ["investigate", "intervene"], note: "التعافي يختفي. واصل التحقق، أو ابدأ الحديث الآن. كلاهما معقول، أما التجاهل فلا." },
+      { t: "ينسحب من زملائه", d: "يتغيب سام عن فطور الفريق بعد المناوبات الليلية، ويأكل وحده، ويرد على الرسائل بكلمة واحدة.",
+        rec: ["intervene"], note: "الآن هناك نمط: انفعال وإجهاد في العمل وانسحاب. انتقل من المراقبة إلى حديث خاص يملؤه الاهتمام." },
+      { t: "«لم أعد أشعر بأي شيء تجاه العمل.»", d: "قالها لك سام بهدوء أثناء تسليم المناوبة.",
+        rec: ["intervene"], note: "وصف سام انفصاله العاطفي بكلماته هو. استجب الآن: اشكره على مصارحتك، واسأل أكثر، وقدّم الدعم. لا تنتظر حتى يتراجع الأداء." }
+    ]
   },
-  {
-    who: "Nurse Jonah P.", role: "Medical ward nurse, 4 years", answer: "green",
-    text: "Jonah had a brutal week: two rapid-response calls and a patient death on Thursday. He was short-tempered on Friday and told the huddle he was wiped out. After his weekend off he is back to his usual self, joking with the team and asking how the patient's family is doing.",
-    signals: ["Clear trigger: a hard week and a death", "Said openly how he felt", "Recovered after rest", "Still connected and caring"],
-    beneath: "A normal stress response to a heavy week. The key sign is recovery: rest worked, and his connection to patients and colleagues is intact.",
-    response: "Acknowledge the hard week. A short post-event debrief would still help the whole team. Watch only if the pattern starts repeating without recovery."
-  },
-  {
-    who: "Lena M.", role: "Hospital pharmacist, 8 years", answer: "amber",
-    text: "For three weeks Lena has stayed about 90 minutes late every day. She eats lunch at her desk or not at all, and double-checks her own verifications. When asked, she says: “It's fine, I'll catch up once things calm down.” Things have not calmed down.",
-    signals: ["Weeks of sustained overtime", "Skipped breaks", "Checking her own work twice", "Minimising: “it's fine”"],
-    beneath: "Depletion is building, and anxiety about making an error may be driving the overwork. This is a workload problem that she is trying to solve alone.",
-    response: "Name the pattern kindly and ask about workload. Involve the lead to look at staffing and the queue, protect her breaks, and check in again in two weeks."
-  },
-  {
-    who: "Daniel R.", role: "ICU charge nurse, 12 years", answer: "red",
-    text: "Daniel volunteers for every extra shift and hasn't taken annual leave in over a year. Lately his humour has turned: he calls patients “bed 7” or “another frequent flyer” and rolls his eyes at families. He has taken four single sick days this quarter for “headaches”.",
-    signals: ["No recovery time for over a year", "Depersonalising language about patients", "Cynicism toward families", "Repeated short-notice sick days"],
-    beneath: "He is running on empty. Overcommitment can be a warning sign, not a strength, and dark humour can be detachment used as self-protection.",
-    response: "A private conversation focused on him, not a reprimand about the jokes. A leader should make sure leave is taken and cap extra shifts, and offer occupational health. Address the language as well, because cynicism spreads through a team."
-  },
-  {
-    who: "Dr. Priya S.", role: "Second-year resident", answer: "green",
-    text: "It is board-exam season. Priya is anxious and was tearful after a hard night. She talks openly with peers about the pressure, asked her chief resident for a schedule swap so she can study, and still lights up when she teaches medical students.",
-    signals: ["Time-limited stressor", "Open about how she feels", "Asked for help", "Still finds meaning in the work"],
-    beneath: "High stress, but strong protective factors: connection, help-seeking and meaning. This looks like a hard season, not burnout.",
-    response: "Support the swap and normalise the stress. Check in after the exam, and watch for stress that doesn't lift once it's over."
-  },
-  {
-    who: "Marco T.", role: "Outpatient physiotherapist, 10 years", answer: "amber",
-    text: "Marco used to volunteer to mentor students; this term he said no. In meetings he says: “What's the point? Nothing ever changes here.” His patient outcomes and notes are still good, and he still has lunch with his close colleague.",
-    signals: ["Pulling back from roles he valued", "Growing cynicism about the organisation", "Performance still intact", "Still connected to one colleague"],
-    beneath: "Early cynicism, possibly from feeling unheard. The one strong friendship is a protective factor worth noticing.",
-    response: "Ask him what he would change if he could, and act on at least one concern so he sees that something does change. His colleague can check in informally."
-  },
-  {
-    who: "Grace A.", role: "Senior midwife, 15 years", answer: "red",
-    text: "Grace's documentation is flawless and nobody has a complaint about her. But colleagues have noticed that she sits in her car for 20 minutes before every shift, no longer eats in the staff room, and last week she said quietly: “I feel numb when babies are born now.”",
-    signals: ["Dread before every shift", "Isolating from colleagues", "Numbness toward the most meaningful part of the job", "Competence hides it all"],
-    beneath: "Emotional exhaustion and loss of meaning, hidden behind excellent work. Accumulated trauma from difficult births may be part of it.",
-    response: "A gentle private check-in that reflects back what she said. Ask openly how she has been and offer support routes: peer support, occupational health, psychological support. If she hints at hopelessness, ask directly about her safety."
-  }
-];
-
-const CASE = {
-  who: "Sam Okafor", role: "ICU nurse, 9 years",
-  intro: "Colleagues describe Sam as “the one you want on a bad night.” Over the next few weeks, you notice some things.",
-  clues: [
-    { t: "Increased irritability", d: "Sam snapped at a junior nurse over a delayed medication and at a resident during rounds. Two colleagues mention it in passing.",
-      rec: ["investigate"], note: "One sign is a data point, not a pattern. Notice it and look for more. A quick “You seemed rushed today, all OK?” costs nothing." },
-    { t: "Still performing well", d: "No incidents, clean audits, and families keep praising Sam.",
-      rec: ["investigate"], note: "This is the clue that makes burnout silent. Good performance is not evidence that someone is fine. Many teams stop looking here." },
-    { t: "Stops taking breaks", d: "Sam has worked through every break for two weeks and says, “I'm faster if I just keep going.”",
-      rec: ["investigate", "intervene"], note: "Recovery is disappearing. Keep investigating, or start the conversation now. Both are reasonable. Ignoring it isn't." },
-    { t: "Withdraws from colleagues", d: "Sam skips the team breakfast after night shifts, eats alone and answers messages with one word.",
-      rec: ["intervene"], note: "Now there is a pattern: irritability, overwork and withdrawal. Move from watching to a private, caring conversation." },
-    { t: "“I don't feel anything about the job anymore.”", d: "Sam says it quietly to you during handover.",
-      rec: ["intervene"], note: "Sam has described emotional detachment in their own words. Respond now: thank Sam for telling you, ask more, and offer support. Don't wait for performance to drop." }
-  ]
+  VOTES: [["investigate", "تحقّق"], ["ignore", "تجاهل"], ["intervene", "تدخّل"]],
+  IMPACTS: [
+    "الزملاء يتحملون عملًا إضافيًا بصمت",
+    "تسليم المناوبات يصبح أقصر وأقل أمانًا",
+    "الموظفون الجدد يتوقفون عن طرح الأسئلة",
+    "التشاؤم ينتشر في الفريق",
+    "المرضى وعائلاتهم يشعرون برعاية أقل",
+    "ارتفاع خطر الأخطاء والحوادث الوشيكة",
+    "مزيد من الإجازات المرضية وفجوات مفاجئة في جدول المناوبات",
+    "خسارة المهنة لممارس صحي جيد"
+  ],
+  STATEMENTS: [
+    { s: "الكل متعب. أنت فقط بحاجة إلى إجازة.", a: "unhelpful",
+      why: "تقلل من شأن مشاعره وتقدّم حلًا سريعًا يُغلق باب الحديث.",
+      better: "«يبدو أن هذا يتراكم منذ فترة. ما أصعب ما مررت به؟»" },
+    { s: "لاحظت أنك تبدو منعزلًا أكثر في الفترة الأخيرة. هل تودّ أن نتحدث عن أحوالك؟", a: "helpful",
+      why: "تذكر ملاحظة محددة دون حكم، وتترك القرار له." },
+    { s: "بصراحة، إذا لم تكن تتحمل الضغط، فربما هذه ليست الوظيفة المناسبة لك.", a: "harmful",
+      why: "تلوم وتُخجل، وتعلّم الفريق كله أن المعاناة يجب أن تُخفى.",
+      better: "«هذا العمل يضع ضغطًا كبيرًا علينا جميعًا. لست مضطرًا لحمله وحدك. ما الذي قد يساعدك الآن؟»" },
+    { s: "أنت من أقوى الأشخاص هنا. ستكون بخير.", a: "unhelpful",
+      why: "النية طيبة، لكنها تقول له إن عليه أن يبقى قويًا، وتصعّب عليه الاعتراف بأنه ليس بخير.",
+      better: "«أنت تحمل الكثير عن هذا الفريق. من يهتم بك أنت هذه الأيام؟»" },
+    { s: "لا أستطيع إصلاح كل شيء، لكنني هنا. ما الذي قد يساعدك هذا الأسبوع: تبديل مناوبة، أم استراحة حقيقية، أم مجرد شخص تتحدث إليه؟", a: "helpful",
+      why: "صادقة، وتقدّم خيارات ملموسة، وتترك له الاختيار." },
+    { s: "سأخبر المدير أنك تعاني.", a: "harmful",
+      why: "تجاوزه دون موافقته يهدم الثقة. (إذا كنت قلقًا على سلامته فعليك التصعيد، لكن أخبره بأنك ستفعل ذلك ولماذا.)",
+      better: "«هل يساعدك أن نتحدث مع المدير معًا عن عبء عملك؟ يمكنني أن آتي معك.»" },
+    { s: "هل جرّبت اليوغا أو التأمل الذهني؟", a: "unhelpful",
+      why: "النصيحة غير المطلوبة تحوّل مشكلة في بيئة العمل إلى مشكلة شخصية، وتتخطى الإصغاء.",
+      better: "«ما الذي يساعدك عادةً على التعافي؟ وهل هناك شيء في طبيعة العمل نفسه يمكننا تغييره؟»" },
+    { s: "يبدو هذا ثقيلًا جدًا. شكرًا لأنك أخبرتني.", a: "helpful",
+      why: "تعترف بمشاعره وتقدّر شجاعته في الحديث." },
+    { s: "لا تدع أحدًا يراك هكذا. هذا يبدو غير مهني.", a: "harmful",
+      why: "تعلّم الإخفاء، وهكذا بالضبط يصبح الاحتراق صامتًا.",
+      better: "«لنجد مكانًا هادئًا لبضع دقائق. خذ الوقت الذي تحتاجه.»" }
+  ],
+  CLASSES: [["helpful", "مفيدة"], ["unhelpful", "غير مفيدة"], ["harmful", "قد تكون مؤذية"]],
+  LEVELS: [
+    { id: "me", name: "أنا", sub: "ما سيفعله كلٌّ منا", opts: ["حماية وقت التعافي بين المناوبات", "معرفة علامات الإنذار المبكر لديّ", "اختيار زميل للدعم المتبادل", "وضع حد للمناوبات الإضافية", "أخذ إجازتي السنوية فعلًا"] },
+    { id: "us", name: "نحن", sub: "ما سيفعله فريقنا", opts: ["السؤال «كيف حالنا فعلًا؟» في الاجتماع الصباحي", "تغطية فترات راحة بعضنا بعضًا", "جلسات مراجعة بعد الحوادث الحرجة", "مرافقة الموظفين الجدد والعائدين", "جعل قول «لست بخير» أمرًا طبيعيًا"] },
+    { id: "system", name: "النظام", sub: "ما سنطلبه من القيادة", opts: ["مراجعة عبء العمل عند ارتفاع الإجازات المرضية", "جدول مناوبات عادل وموافقة منصفة على الإجازات", "سهولة الوصول إلى الصحة المهنية وبرنامج مساعدة الموظفين", "قادة يأخذون فترات الراحة والإجازات أمام الجميع", "تقدير محدد ومنتظم"] }
+  ],
+  AWARDS: [["id", "تصنيف صحيح", 1], ["hidden", "علامة خفية", 1], ["resp", "استجابة جيدة", 2], ["bonus", "لاحظ ما فات الآخرين", 1]],
+  TEAMS: ["فريق الفرز", "فريق النبض", "فريق التسليم", "فريق الجولات"],
+  PLAYER: "أنت"
 };
-const VOTES = [["investigate", "Investigate"], ["ignore", "Ignore"], ["intervene", "Intervene"]];
 
-const IMPACTS = [
-  "Colleagues quietly absorb extra work",
-  "Handovers get thinner and less safe",
-  "Junior staff stop asking questions",
-  "Cynicism spreads through the team",
-  "Patients and families feel less cared for",
-  "Risk of errors and near-misses rises",
-  "More sick leave and last-minute gaps in the rota",
-  "A good clinician leaves the profession"
-];
+/* Interface text: English is the key, Arabic the value. */
+const AR_UI = {
+  "Healthcare Team Rescue Mission": "مهمة إنقاذ فريق الرعاية الصحية",
+  "Team Rescue Mission": "مهمة إنقاذ الفريق",
+  "Silent Burnout in Healthcare Teams": "الاحتراق الوظيفي الصامت في فرق الرعاية الصحية",
+  "Stage {n} of 4 · {name} · {goal}": "المرحلة {n} من 4 · {name} · {goal}",
+  "Mission briefing": "إحاطة المهمة",
+  "Your team is functioning. Something is wrong.": "فريقك يعمل. لكن هناك خطبًا ما.",
+  "Every shift is covered and every task gets done. But someone on this team is burning out quietly. Find the signals, understand the impact, respond well, and rebuild. Each stage you complete earns one of four Sustainability Keys.": "كل مناوبة مغطاة وكل مهمة تُنجز. لكن أحد أعضاء هذا الفريق يحترق بصمت. اعثر على الإشارات، وافهم الأثر، واستجب بشكل جيد، وأعد البناء. كل مرحلة تُكملها تمنحك واحدًا من أربعة مفاتيح للاستدامة.",
+  "Patient monitor showing normal vitals and a fading engagement trace": "شاشة مراقبة مريض تُظهر علامات حيوية طبيعية وخط انخراط يخفت",
+  "ENGAGEMENT ↓": "الانخراط ↓",
+  "All tasks complete · 0 incidents": "كل المهام مكتملة · 0 حوادث",
+  "Signal fading": "الإشارة تخفت",
+  "Stage {n}": "المرحلة {n}",
+  "How are you playing?": "كيف ستلعب؟",
+  "Solo: one player, self-paced": "فردي: لاعب واحد بالسرعة التي تناسبه",
+  "Teams: 2–4 teams, one shared screen": "فرق: من 2 إلى 4 فرق على شاشة مشتركة واحدة",
+  "Number of teams": "عدد الفرق",
+  "Round timer": "مؤقت الجولة",
+  "{n}s": "{n} ث",
+  "Your name": "اسمك",
+  "Team {n} name": "اسم الفريق {n}",
+  "Team {n}": "الفريق {n}",
+  "Before you start.": "قبل أن تبدأ.",
+  "Facilitator note.": "ملاحظة للميسّر.",
+  "This game builds recognition and peer-response skills. It is not a diagnostic tool. If a participant, or anyone they talk about, mentions hopelessness or harming themselves, treat it as urgent: ask directly, stay with them, and use your organisation's urgent support pathway.": "تبني هذه اللعبة مهارات التعرّف على العلامات والاستجابة بين الزملاء، وهي ليست أداة تشخيص. إذا ذكر أحد المشاركين، أو أي شخص يتحدث عنه، شعورًا باليأس أو إيذاء النفس، فتعامل مع الأمر بوصفه حالة عاجلة: اسأل مباشرة، وابقَ معه، واتبع مسار الدعم العاجل في مؤسستك.",
+  "Start the mission": "ابدأ المهمة",
+  "Read the case and make your call: green, amber or red. Jot down what signals you see, what could be happening beneath the surface, and what you would do. Then reveal the expert read and check yourself.": "اقرأ الحالة واتخذ قرارك: أخضر أو أصفر أو أحمر. دوّن الإشارات التي تراها، وما قد يحدث تحت السطح، وما الذي ستفعله. ثم اكشف قراءة الخبير وقيّم نفسك.",
+  "Read the case aloud. Each team holds up a green, amber or red card. Then each team answers: What signals do you see? What could be happening beneath the surface? What would you do as a colleague or team leader?": "اقرأ الحالة بصوت عالٍ. يرفع كل فريق بطاقة خضراء أو صفراء أو حمراء. ثم يجيب كل فريق: ما الإشارات التي تراها؟ ما الذي قد يحدث تحت السطح؟ ماذا ستفعل بصفتك زميلًا أو قائدًا للفريق؟",
+  "Case {n} of {total}": "الحالة {n} من {total}",
+  "Your call": "قرارك",
+  "Signals I see, what might be going on, and what I would do…": "الإشارات التي أراها، وما قد يحدث، وما الذي سأفعله…",
+  "Expert read": "قراءة الخبير",
+  "Facilitator's read": "قراءة الميسّر",
+  "You got it: +1": "أصبت: +1",
+  "Not quite: 0": "ليس تمامًا: 0",
+  "Signals": "الإشارات",
+  "Beneath the surface": "تحت السطح",
+  "A good response": "استجابة مناسبة",
+  "Reveal the answer": "اكشف الإجابة",
+  "Make your call first.": "اتخذ قرارك أولًا.",
+  "Let every team commit to a card first.": "دع كل فريق يختار بطاقته أولًا.",
+  "Check yourself against the expert read": "قيّم نفسك مقارنةً بقراءة الخبير",
+  "I spotted a hidden sign": "لاحظت علامة خفية",
+  "My response matched": "استجابتي كانت مطابقة",
+  "Award points": "امنح النقاط",
+  "Previous case": "الحالة السابقة",
+  "Next case": "الحالة التالية",
+  "Complete Detect and collect the key": "أكمل مرحلة الرصد واحصل على المفتاح",
+  "Clues arrive one at a time. After each one, decide: Investigate, Ignore or Intervene. Don't name a diagnosis. Decide what you'd do, then compare with the expert read.": "تصل الأدلة واحدًا تلو الآخر. بعد كل دليل، قرّر: تحقّق أو تجاهل أو تدخّل. لا تضع تشخيصًا. قرّر ما الذي ستفعله، ثم قارن بقراءة الخبير.",
+  "Reveal one clue at a time. After each clue, every team decides: Investigate, Ignore or Intervene. Don't name a diagnosis. Decide what you'd do.": "اكشف دليلًا واحدًا في كل مرة. بعد كل دليل، يقرّر كل فريق: تحقّق أو تجاهل أو تدخّل. لا تضعوا تشخيصًا. قرّروا ما الذي ستفعلونه.",
+  "Case file": "ملف الحالة",
+  "Clue sealed": "دليل مغلق",
+  " or ": " أو ",
+  "Show the {read}": "اعرض {read}",
+  "Choose first.": "اختر أولًا.",
+  "Case closed": "أُغلقت القضية",
+  "You weren't looking for a diagnosis. You were looking for a signal.": "لم تكن تبحث عن تشخيص. كنت تبحث عن إشارة.",
+  "Reveal clue {n}": "اكشف الدليل {n}",
+  "Next: the ripple effect": "التالي: الأثر المتسلسل",
+  "Show the read for clue 5 to close the case.": "اعرض القراءة للدليل 5 لإغلاق القضية.",
+  "Sam's burnout doesn't stay with Sam. List every way it could affect colleagues, patients and the organisation. Then reveal the ripple map and give yourself a point for each impact you named.": "احتراق سام لا يبقى عند سام. اكتب كل الطرق التي قد يؤثر بها على الزملاء والمرضى والمؤسسة. ثم اكشف خريطة الأثر المتسلسل وامنح نفسك نقطة عن كل أثر ذكرته.",
+  "Who else is affected, and how?": "من يتأثر أيضًا، وكيف؟",
+  "I named this": "ذكرتُ هذا",
+  "Back to the case file": "العودة إلى ملف الحالة",
+  "Complete Connect and collect the key": "أكمل مرحلة الربط واحصل على المفتاح",
+  "Reveal the ripple map": "اكشف خريطة الأثر المتسلسل",
+  "Sam's burnout doesn't stay with Sam. Teams call out who else is affected and how. When a team names an impact on the map, give that team the point.": "احتراق سام لا يبقى عند سام. تذكر الفرق من يتأثر أيضًا وكيف. عندما يذكر فريق أثرًا موجودًا على الخريطة، امنح ذلك الفريق النقطة.",
+  "Impact {n}: not named yet": "الأثر {n}: لم يُذكر بعد",
+  "Show all impacts": "اعرض كل الآثار",
+  "A colleague is showing signs of burnout. Someone says this to them. Classify it, and if it isn't helpful, write a better version before you reveal the answer.": "زميل تظهر عليه علامات الاحتراق الوظيفي، وقال له أحدهم هذه العبارة. صنّفها، وإن لم تكن مفيدة فاكتب صيغة أفضل قبل أن تكشف الإجابة.",
+  "A colleague is showing signs of burnout. Someone says this to them. Teams race to classify it. Then rewrite anything that isn't helpful.": "زميل تظهر عليه علامات الاحتراق الوظيفي، وقال له أحدهم هذه العبارة. تتسابق الفرق لتصنيفها، ثم تعيد صياغة أي عبارة غير مفيدة.",
+  "Statement {n} of {total}": "العبارة {n} من {total}",
+  "Each team's call": "قرار كل فريق",
+  "Your rewrite, if it needs one…": "صياغتك البديلة، إن لزم الأمر…",
+  "My rewrite was as good": "صياغتي كانت بالجودة نفسها",
+  "Strong rewrite": "صياغة بديلة قوية",
+  "Answer": "الإجابة",
+  "Why": "لماذا",
+  "Say this instead": "قل هذا بدلًا من ذلك",
+  "Record each team's call first.": "سجّل قرار كل فريق أولًا.",
+  "Previous statement": "العبارة السابقة",
+  "Next statement": "العبارة التالية",
+  "Complete Respond and collect the key": "أكمل مرحلة الاستجابة واحصل على المفتاح",
+  "Build a sustainability plan for your own team. Choose at least one action at each level, then write one commitment with a named owner and a date.": "ابنِ خطة استدامة لفريقك. اختر إجراءً واحدًا على الأقل في كل مستوى، ثم اكتب التزامًا واحدًا مع تحديد المسؤول والموعد.",
+  "Each team builds a sustainability plan for the team from the mission. Choose at least one action at each level, then write one commitment of your own with a named owner and a date.": "يبني كل فريق خطة استدامة للفريق الوارد في المهمة. اختاروا إجراءً واحدًا على الأقل في كل مستوى، ثم اكتبوا التزامًا خاصًا بكم مع تحديد المسؤول والموعد.",
+  "if covered": "عند تغطيته",
+  "Our own commitment: who, what, by when": "التزامنا الخاص: من، وماذا، ومتى",
+  "e.g. Charge nurse adds a two-minute “How are we really?” round to the 07:30 huddle, starting Monday, reviewed after 4 weeks.": "مثال: يضيف رئيس التمريض جولة مدتها دقيقتان بعنوان «كيف حالنا فعلًا؟» إلى اجتماع الساعة 07:30 الصباحي، بدءًا من الأحد، وتُراجع بعد 4 أسابيع.",
+  "Names an owner and a date": "يحدد المسؤول والموعد",
+  "Your plan": "خطتك",
+  "All plans": "كل الخطط",
+  "Copy my plan": "انسخ خطتي",
+  "Copy all plans": "انسخ كل الخطط",
+  "Copied": "تم النسخ",
+  "Complete Restore and collect the final key": "أكمل مرحلة الاستعادة واحصل على المفتاح الأخير",
+  "Nothing yet": "لا شيء بعد",
+  "Commitment": "الالتزام",
+  "Mission debrief · {got} of 4 keys collected": "استخلاص المهمة · جُمع {got} من 4 مفاتيح",
+  "Team restored": "تمت استعادة الفريق",
+  "Mission in progress": "المهمة جارية",
+  "Your score": "نتيجتك",
+  "of {max}": "من {max}",
+  "Final standings": "الترتيب النهائي",
+  "Take these back to your ward": "خذ هذه الرسائل معك إلى قسمك",
+  "Silent burnout hides behind good performance.": "الاحتراق الصامت يختبئ خلف الأداء الجيد.",
+  "Look for change from someone's own normal, and for patterns rather than single signs.": "ابحث عن التغيّر عمّا هو معتاد لدى الشخص نفسه، وعن الأنماط لا العلامات المنفردة.",
+  "You don't need a diagnosis to start a caring conversation.": "لا تحتاج إلى تشخيص لتبدأ حديثًا يملؤه الاهتمام.",
+  "Burnout is a team and system issue, not a personal failing.": "الاحتراق الوظيفي قضية فريق ونظام، لا إخفاق شخصي.",
+  "Brief": "الإحاطة",
+  "Debrief": "الاستخلاص",
+  "→": "←",
+  "{name}'s score": "نتيجة {name}",
+  "Scoreboard": "لوحة النتائج",
+  "Take a point from {name}": "اخصم نقطة من {name}",
+  "Give {name} a bonus point": "امنح {name} نقطة إضافية",
+  "Pause": "إيقاف مؤقت",
+  "Restart": "إعادة البدء",
+  "Start": "ابدأ",
+  "Reset": "إعادة الضبط",
+  "Sustainability keys · {got} of 4": "مفاتيح الاستدامة · {got} من 4",
+  "Sustainability key {n} of 4": "مفتاح الاستدامة {n} من 4",
+  "{name} unlocked": "تم فتح مرحلة {name}",
+  "{goal}: done.": "{goal}: تم.",
+  "Continue to {name}": "تابع إلى مرحلة {name}",
+  "Go to the mission debrief": "انتقل إلى استخلاص المهمة",
+  "Solo mode. Each answer stays hidden until you make your own call.": "الوضع الفردي. تبقى كل إجابة مخفية حتى تتخذ قرارك.",
+  "Facilitator view. Answers stay hidden until you press Reveal, so this screen is safe to project.": "عرض الميسّر. تبقى الإجابات مخفية حتى تضغط «اكشف»، لذا يمكن عرض هذه الشاشة أمام الجميع بأمان.",
+  "Clear all scores and answers?": "مسح كل النتائج والإجابات؟",
+  "Cancel": "إلغاء",
+  "Reset game": "إعادة ضبط اللعبة"
+};
 
-const STATEMENTS = [
-  { s: "Everyone is tired. You just need a vacation.", a: "unhelpful",
-    why: "It minimises what they feel and offers a quick fix that closes the conversation.",
-    better: "“It sounds like this has been building for a while. What's been the hardest part?”" },
-  { s: "I've noticed you've seemed more withdrawn lately. Do you want to talk about how things have been going?", a: "helpful",
-    why: "It names a specific observation without judging it, and leaves the choice with them." },
-  { s: "Honestly, if you can't handle the pressure, maybe this isn't the job for you.", a: "harmful",
-    why: "It blames and shames, and it teaches the whole team that struggling must be hidden.",
-    better: "“This job puts a lot of pressure on all of us. You don't have to carry it alone. What would help right now?”" },
-  { s: "You're one of the strongest people here. You'll be fine.", a: "unhelpful",
-    why: "It's well meant, but it tells them they have to stay strong and makes it harder to admit they're not fine.",
-    better: "“You carry a lot for this team. Who's looking out for you at the moment?”" },
-  { s: "I can't fix everything, but I'm here. What would help this week: a swap, a proper break, or just someone to talk to?", a: "helpful",
-    why: "It's honest, offers concrete options and lets them choose." },
-  { s: "I'll let the manager know you're struggling.", a: "harmful",
-    why: "Going over their head without consent breaks trust. (If you are worried about their safety, you do need to escalate, but tell them you're doing it and why.)",
-    better: "“Would it help if we spoke to the manager together about your workload? I can come with you.”" },
-  { s: "Have you tried yoga or mindfulness?", a: "unhelpful",
-    why: "Unasked-for advice turns a workplace problem into a personal one and skips the listening.",
-    better: "“What usually helps you recover? And is there anything about the work itself we could change?”" },
-  { s: "That sounds really heavy. Thank you for telling me.", a: "helpful",
-    why: "It validates the feeling and rewards them for speaking up." },
-  { s: "Don't let anyone see you like this. It looks unprofessional.", a: "harmful",
-    why: "It teaches concealment, which is how burnout becomes silent in the first place.",
-    better: "“Let's find somewhere quiet for a few minutes. Take the time you need.”" }
-];
-const CLASSES = [["helpful", "Helpful"], ["unhelpful", "Unhelpful"], ["harmful", "Potentially harmful"]];
-
-const LEVELS = [
-  { id: "me", name: "Me", sub: "What each of us will do", opts: ["Protect recovery between shifts", "Know my own early warning signs", "Pick a peer-support partner", "Set a limit on extra shifts", "Actually use my annual leave"] },
-  { id: "us", name: "Us", sub: "What our team will do", opts: ["Ask “How are we really?” at huddle", "Cover each other's breaks", "Debrief after critical incidents", "Buddy new and returning staff", "Make it normal to say “I'm not OK”"] },
-  { id: "system", name: "System", sub: "What we'll ask leadership for", opts: ["Review workload when sick leave rises", "Fair rota and leave approval", "Easy access to occupational health and EAP", "Leaders visibly take breaks and leave", "Specific, regular recognition"] }
-];
+let STAGES, TRIAGE, SCENARIOS, CASE, VOTES, IMPACTS, STATEMENTS, CLASSES, LEVELS, AWARDS;
+const ar = () => S.lang === "ar";
+function t(s, v) {
+  let r = (ar() && AR_UI[s]) || s;
+  if (v) r = r.replace(/\{(\w+)\}/g, (_, k) => v[k]);
+  return r;
+}
+const q = s => ar() ? `«${s}»` : `“${s}”`;
+function applyLang() {
+  ({ STAGES, TRIAGE, SCENARIOS, CASE, VOTES, IMPACTS, STATEMENTS, CLASSES, LEVELS, AWARDS } = ar() ? AR : EN);
+  const root = document.documentElement;
+  root.lang = ar() ? "ar" : "en";
+  root.dir = ar() ? "rtl" : "ltr";
+  document.title = t("Healthcare Team Rescue Mission");
+}
 
 /* ---------- State ---------- */
 const STORE = "rescue-mission-v1";
-function fresh(n) {
+function fresh(n, lang) {
   n = n || 3;
-  const names = ["Team Triage", "Team Pulse", "Team Handover", "Team Rounds"];
+  const names = (lang === "ar" ? AR : EN).TEAMS;
   return {
     stage: "brief",
+    lang: lang || "en",
     mode: "teams",
     teams: names.slice(0, n),
     notes: {},
@@ -371,7 +654,6 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch 
 function load() { try { const v = JSON.parse(localStorage.getItem(STORE)); if (v && v.teams) return v; } catch (e) {} return null; }
 
 /* ---------- Scoring ---------- */
-const AWARDS = [["id", "Correct call", 1], ["hidden", "Hidden sign", 1], ["resp", "Good response", 2], ["bonus", "Spotted what others missed", 1]];
 function scores() {
   const s = S.teams.map((_, t) => S.adj[t] || 0);
   for (const i in S.detect.awards) for (const t in S.detect.awards[i]) {
@@ -406,7 +688,7 @@ function maxScore() {
 
 /* ---------- Helpers ---------- */
 const solo = () => S.mode === "solo";
-const readLabel = () => solo() ? "Expert read" : "Facilitator's read";
+const readLabel = () => solo() ? t("Expert read") : t("Facilitator's read");
 const note = (key, ph, rows) => `<textarea id="n-${key}" data-note="${key}" placeholder="${h(ph)}"${rows ? ` style="min-height:${rows}px"` : ""}>${h(S.notes[key] || "")}</textarea>`;
 const h = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const keySvg = got => `<svg class="keyicon${got ? " got" : ""}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="12" r="4.5"/><path d="M12 12h9M18 12v3.5M21 12v2.5"/></svg>`;
@@ -414,7 +696,7 @@ const stageIdx = id => STAGES.findIndex(s => s.id === id);
 const pressed = b => `aria-pressed="${b ? "true" : "false"}"`;
 function head(stage, extra) {
   const st = STAGES[stageIdx(stage)];
-  return `<div class="stagehead"><span class="label">Stage ${stageIdx(stage) + 1} of 4 · ${h(st.name)} · ${h(st.goal)}</span><h2>${h(st.game)}</h2>${extra ? `<p class="lede">${extra}</p>` : ""}</div>`;
+  return `<div class="stagehead"><span class="label">${h(t("Stage {n} of 4 · {name} · {goal}", { n: stageIdx(stage) + 1, name: st.name, goal: st.goal }))}</span><h2>${h(st.game)}</h2>${extra ? `<p class="lede">${h(t(extra))}</p>` : ""}</div>`;
 }
 
 /* ---------- Views ---------- */
@@ -422,33 +704,33 @@ function vBrief() {
   return `
   <section class="hero">
     <div style="display:grid;gap:14px">
-      <span class="label">Mission briefing</span>
-      <h2>Your team is functioning. Something is wrong.</h2>
-      <p class="lede" style="color:var(--muted);max-width:52ch">Every shift is covered and every task gets done. But someone on this team is burning out quietly. Find the signals, understand the impact, respond well, and rebuild. Each stage you complete earns one of four Sustainability Keys.</p>
+      <span class="label">${t("Mission briefing")}</span>
+      <h2>${t("Your team is functioning. Something is wrong.")}</h2>
+      <p class="lede" style="color:var(--muted);max-width:52ch">${t("Every shift is covered and every task gets done. But someone on this team is burning out quietly. Find the signals, understand the impact, respond well, and rebuild. Each stage you complete earns one of four Sustainability Keys.")}</p>
     </div>
-    <div class="monitor" aria-label="Patient monitor showing normal vitals and a fading engagement trace">
-      <div class="vitals"><span>HR 74</span><span>BP 118/76</span><span>SpO₂ 98%</span><span class="warn">ENGAGEMENT ↓</span></div>
+    <div class="monitor" dir="ltr" aria-label="${h(t("Patient monitor showing normal vitals and a fading engagement trace"))}">
+      <div class="vitals"><span>HR 74</span><span>BP 118/76</span><span>SpO₂ 98%</span><span class="warn" dir="auto">${t("ENGAGEMENT ↓")}</span></div>
       <canvas id="ecg" width="600" height="150"></canvas>
-      <div class="vitals"><span>All tasks complete · 0 incidents</span><span class="warn">Signal fading</span></div>
+      <div class="vitals"><span dir="auto">${t("All tasks complete · 0 incidents")}</span><span class="warn" dir="auto">${t("Signal fading")}</span></div>
     </div>
   </section>
   <ol class="steps">
-    ${STAGES.map((s, i) => `<li><span class="label">Stage ${i + 1}</span><span class="s">${h(s.name)}</span><span>${h(s.goal)}</span><span style="color:var(--muted);font-size:15px">${h(s.game)}</span></li>`).join("")}
+    ${STAGES.map((s, i) => `<li><span class="label">${t("Stage {n}", { n: i + 1 })}</span><span class="s">${h(s.name)}</span><span>${h(s.goal)}</span><span style="color:var(--muted);font-size:15px">${h(s.game)}</span></li>`).join("")}
   </ol>
   <section style="display:grid;gap:12px">
-    <span class="label">How are you playing?</span>
+    <span class="label">${t("How are you playing?")}</span>
     <div class="row">
-      <button class="toggle" data-act="mode" data-m="solo" ${pressed(solo())}>Solo: one player, self-paced</button>
-      <button class="toggle" data-act="mode" data-m="teams" ${pressed(!solo())}>Teams: 2–4 teams, one shared screen</button>
+      <button class="toggle" data-act="mode" data-m="solo" ${pressed(solo())}>${t("Solo: one player, self-paced")}</button>
+      <button class="toggle" data-act="mode" data-m="teams" ${pressed(!solo())}>${t("Teams: 2–4 teams, one shared screen")}</button>
     </div>
-    <div class="row">${solo() ? "" : `<span>Number of teams</span>${[2, 3, 4].map(n => `<button class="toggle" data-act="teamsCount" data-n="${n}" ${pressed(S.teams.length === n)}>${n}</button>`).join("")}`}
-      <span${solo() ? "" : ' style="margin-left:12px"'}>Round timer</span>${[60, 90, 120, 180].map(n => `<button class="toggle" data-act="timerDur" data-n="${n}" ${pressed(S.timerDur === n)}>${n}s</button>`).join("")}</div>
+    <div class="row">${solo() ? "" : `<span>${t("Number of teams")}</span>${[2, 3, 4].map(n => `<button class="toggle" data-act="teamsCount" data-n="${n}" ${pressed(S.teams.length === n)}>${n}</button>`).join("")}`}
+      <span${solo() ? "" : ' style="margin-inline-start:12px"'}>${t("Round timer")}</span>${[60, 90, 120, 180].map(n => `<button class="toggle" data-act="timerDur" data-n="${n}" ${pressed(S.timerDur === n)}>${t("{n}s", { n })}</button>`).join("")}</div>
     <div class="setup">${solo()
-      ? `<label for="tn0">Your name<input type="text" id="tn0" data-team="0" value="${h(S.teams[0])}" maxlength="28"></label>`
-      : S.teams.map((n, t) => `<label for="tn${t}">Team ${t + 1} name<input type="text" id="tn${t}" data-team="${t}" value="${h(n)}" maxlength="28"></label>`).join("")}</div>
+      ? `<label for="tn0">${t("Your name")}<input type="text" id="tn0" data-team="0" value="${h(S.teams[0])}" maxlength="28"></label>`
+      : S.teams.map((n, i) => `<label for="tn${i}">${t("Team {n} name", { n: i + 1 })}<input type="text" id="tn${i}" data-team="${i}" value="${h(n)}" maxlength="28"></label>`).join("")}</div>
   </section>
-  <p class="safety"><b>${solo() ? "Before you start." : "Facilitator note."}</b> This game builds recognition and peer-response skills. It is not a diagnostic tool. If a participant, or anyone they talk about, mentions hopelessness or harming themselves, treat it as urgent: ask directly, stay with them, and use your organisation's urgent support pathway.</p>
-  <div class="nav"><span></span><button class="btn primary" data-act="go" data-s="detect">Start the mission</button></div>`;
+  <p class="safety"><b>${solo() ? t("Before you start.") : t("Facilitator note.")}</b> ${t("This game builds recognition and peer-response skills. It is not a diagnostic tool. If a participant, or anyone they talk about, mentions hopelessness or harming themselves, treat it as urgent: ask directly, stay with them, and use your organisation's urgent support pathway.")}</p>
+  <div class="nav"><span></span><button class="btn primary" data-act="go" data-s="detect">${t("Start the mission")}</button></div>`;
 }
 
 function vDetect() {
@@ -460,30 +742,30 @@ function vDetect() {
     : "Read the case aloud. Each team holds up a green, amber or red card. Then each team answers: What signals do you see? What could be happening beneath the surface? What would you do as a colleague or team leader?")}
   ${solo() ? "" : `<div class="row">${Object.entries(TRIAGE).map(([k, v]) => `<span class="tri ${k}">${h(v)}</span>`).join("")}</div>`}
   <article class="case">
-    <span class="label">Case ${i + 1} of ${SCENARIOS.length}</span>
+    <span class="label">${t("Case {n} of {total}", { n: i + 1, total: SCENARIOS.length })}</span>
     <div class="who">${h(sc.who)}</div><span style="color:var(--muted)">${h(sc.role)}</span>
     <p class="text">${h(sc.text)}</p>
   </article>
-  ${solo() ? `<section style="display:grid;gap:10px"><span class="label">Your call</span>
+  ${solo() ? `<section style="display:grid;gap:10px"><span class="label">${t("Your call")}</span>
     <div class="row">${Object.entries(TRIAGE).map(([k, v]) => `<button class="tri ${k}" data-act="dpick" data-v="${k}" ${pressed(pick === k)} ${shown ? "disabled" : ""}>${h(v)}</button>`).join("")}</div>
-    ${note("d" + i, "Signals I see, what might be going on, and what I would do…")}
+    ${note("d" + i, t("Signals I see, what might be going on, and what I would do…"))}
   </section>` : ""}
   ${shown ? `<section class="reveal">
-    <div class="row"><span class="label">${readLabel()}</span><span class="tri ${sc.answer}">${h(TRIAGE[sc.answer])}</span>${solo() ? `<span style="font-family:var(--mono)">${pick === sc.answer ? "You got it: +1" : "Not quite: 0"}</span>` : ""}</div>
+    <div class="row"><span class="label">${readLabel()}</span><span class="tri ${sc.answer}">${h(TRIAGE[sc.answer])}</span>${solo() ? `<span style="font-family:var(--mono)"><bdi>${pick === sc.answer ? t("You got it: +1") : t("Not quite: 0")}</bdi></span>` : ""}</div>
     <div class="cols">
-      <div><span class="label">Signals</span><ul>${sc.signals.map(x => `<li>${h(x)}</li>`).join("")}</ul></div>
-      <div><span class="label">Beneath the surface</span><p>${h(sc.beneath)}</p></div>
-      <div><span class="label">A good response</span><p>${h(sc.response)}</p></div>
+      <div><span class="label">${t("Signals")}</span><ul>${sc.signals.map(x => `<li>${h(x)}</li>`).join("")}</ul></div>
+      <div><span class="label">${t("Beneath the surface")}</span><p>${h(sc.beneath)}</p></div>
+      <div><span class="label">${t("A good response")}</span><p>${h(sc.response)}</p></div>
     </div>
-  </section>` : `<div class="row"><button class="btn primary" data-act="reveal" ${solo() && !pick ? "disabled" : ""}>Reveal the answer</button><span class="hidden-note">${solo() ? "Make your call first." : "Let every team commit to a card first."}</span></div>`}
-  ${solo() ? (shown ? `<section style="display:grid;gap:10px"><span class="label">Check yourself against the expert read</span>
-    <div class="row">${AWARDS.filter(([k]) => k === "hidden" || k === "resp").map(([k, , p]) => `<button class="toggle" data-act="award" data-k="${k}" data-t="0" ${pressed((aw[0] || {})[k])}>${k === "hidden" ? "I spotted a hidden sign" : "My response matched"} <span class="pts">+${p}</span></button>`).join("")}</div>
-  </section>` : "") : `<section style="display:grid;gap:10px"><span class="label">Award points</span>
-    <div class="teams">${S.teams.map((n, t) => { const a = aw[t] || {}; return `<div class="team"><div class="tname">${h(n)}</div><div class="row">${AWARDS.map(([k, l, p]) => `<button class="toggle" data-act="award" data-k="${k}" data-t="${t}" ${pressed(a[k])}>${h(l)} <span class="pts">+${p}</span></button>`).join("")}</div></div>`; }).join("")}</div>
+  </section>` : `<div class="row"><button class="btn primary" data-act="reveal" ${solo() && !pick ? "disabled" : ""}>${t("Reveal the answer")}</button><span class="hidden-note">${solo() ? t("Make your call first.") : t("Let every team commit to a card first.")}</span></div>`}
+  ${solo() ? (shown ? `<section style="display:grid;gap:10px"><span class="label">${t("Check yourself against the expert read")}</span>
+    <div class="row">${AWARDS.filter(([k]) => k === "hidden" || k === "resp").map(([k, , p]) => `<button class="toggle" data-act="award" data-k="${k}" data-t="0" ${pressed((aw[0] || {})[k])}>${k === "hidden" ? t("I spotted a hidden sign") : t("My response matched")} <span class="pts">+${p}</span></button>`).join("")}</div>
+  </section>` : "") : `<section style="display:grid;gap:10px"><span class="label">${t("Award points")}</span>
+    <div class="teams">${S.teams.map((n, ti) => { const a = aw[ti] || {}; return `<div class="team"><div class="tname">${h(n)}</div><div class="row">${AWARDS.map(([k, l, p]) => `<button class="toggle" data-act="award" data-k="${k}" data-t="${ti}" ${pressed(a[k])}>${h(l)} <span class="pts">+${p}</span></button>`).join("")}</div></div>`; }).join("")}</div>
   </section>`}
   <div class="nav">
-    <button class="btn" data-act="detectStep" data-d="-1" ${i === 0 ? "disabled" : ""}>Previous case</button>
-    ${i < SCENARIOS.length - 1 ? `<button class="btn primary" data-act="detectStep" data-d="1">Next case</button>` : `<button class="btn primary" data-act="complete" data-s="detect">Complete Detect and collect the key</button>`}
+    <button class="btn" data-act="detectStep" data-d="-1" ${i === 0 ? "disabled" : ""}>${t("Previous case")}</button>
+    ${i < SCENARIOS.length - 1 ? `<button class="btn primary" data-act="detectStep" data-d="1">${t("Next case")}</button>` : `<button class="btn primary" data-act="complete" data-s="detect">${t("Complete Detect and collect the key")}</button>`}
   </div>`;
 }
 
@@ -494,37 +776,37 @@ function vConnect() {
   return `${head("connect", solo()
     ? "Clues arrive one at a time. After each one, decide: Investigate, Ignore or Intervene. Don't name a diagnosis. Decide what you'd do, then compare with the expert read."
     : "Reveal one clue at a time. After each clue, every team decides: Investigate, Ignore or Intervene. Don't name a diagnosis. Decide what you'd do.")}
-  <article class="case"><span class="label">Case file</span><div class="who">${h(CASE.who)}</div><span style="color:var(--muted)">${h(CASE.role)}</span><p class="text">${h(CASE.intro)}</p></article>
+  <article class="case"><span class="label">${t("Case file")}</span><div class="who">${h(CASE.who)}</div><span style="color:var(--muted)">${h(CASE.role)}</span><p class="text">${h(CASE.intro)}</p></article>
   <ol class="clues">${CASE.clues.map((cl, ci) => {
-    if (ci >= c.shown) return `<li class="clue locked"><span class="n">${ci + 1}</span><div class="body"><span>Clue sealed</span></div></li>`;
+    if (ci >= c.shown) return `<li class="clue locked"><span class="n">${ci + 1}</span><div class="body"><span>${t("Clue sealed")}</span></div></li>`;
     const v = c.votes[ci] || {}, rs = !!c.recShown[ci];
     return `<li class="clue"><span class="n">${ci + 1}</span><div class="body">
       <div class="t">${h(cl.t)}</div><p>${h(cl.d)}</p>
-      <div class="votes">${S.teams.map((n, t) => `<div class="vote"><span class="who">${h(n)}</span>${VOTES.map(([k, l]) => `<button class="toggle" data-act="vote" data-c="${ci}" data-t="${t}" data-v="${k}" ${pressed(v[t] === k)}>${l}${rs && v[t] === k && cl.rec.includes(k) ? ' <span class="pts">+1</span>' : ""}</button>`).join("")}</div>`).join("")}</div>
-      ${rs ? `<div class="rec"><b>${readLabel()}: ${cl.rec.map(r => VOTES.find(x => x[0] === r)[1]).join(" or ")}.</b> ${h(cl.note)}</div>` : `<div class="row"><button class="btn small" data-act="recShow" data-c="${ci}" ${solo() && !v[0] ? "disabled" : ""}>Show the ${readLabel().toLowerCase()}</button>${solo() && !v[0] ? '<span class="hidden-note">Choose first.</span>' : ""}</div>`}
+      <div class="votes">${S.teams.map((n, ti) => `<div class="vote"><span class="who">${h(n)}</span>${VOTES.map(([k, l]) => `<button class="toggle" data-act="vote" data-c="${ci}" data-t="${ti}" data-v="${k}" ${pressed(v[ti] === k)}>${l}${rs && v[ti] === k && cl.rec.includes(k) ? ' <span class="pts">+1</span>' : ""}</button>`).join("")}</div>`).join("")}</div>
+      ${rs ? `<div class="rec"><b>${readLabel()}: ${cl.rec.map(r => VOTES.find(x => x[0] === r)[1]).join(t(" or "))}.</b> ${h(cl.note)}</div>` : `<div class="row"><button class="btn small" data-act="recShow" data-c="${ci}" ${solo() && !v[0] ? "disabled" : ""}>${t("Show the {read}", { read: readLabel().toLowerCase() })}</button>${solo() && !v[0] ? `<span class="hidden-note">${t("Choose first.")}</span>` : ""}</div>`}
     </div></li>`;
   }).join("")}</ol>
-  ${allDone ? `<div class="signal"><span class="label" style="color:inherit;opacity:.7">Case closed</span><p>You weren't looking for a diagnosis. You were looking for a signal.</p></div>` : ""}
+  ${allDone ? `<div class="signal"><span class="label" style="color:inherit;opacity:.7">${t("Case closed")}</span><p>${t("You weren't looking for a diagnosis. You were looking for a signal.")}</p></div>` : ""}
   <div class="nav">
     <span></span>
-    ${c.shown < CASE.clues.length ? `<button class="btn primary" data-act="nextClue" ${c.recShown[c.shown - 1] ? "" : "disabled"}>Reveal clue ${c.shown + 1}</button>` : allDone ? `<button class="btn primary" data-act="phase" data-p="ripple">Next: the ripple effect</button>` : `<span class="hidden-note">Show the read for clue 5 to close the case.</span>`}
+    ${c.shown < CASE.clues.length ? `<button class="btn primary" data-act="nextClue" ${c.recShown[c.shown - 1] ? "" : "disabled"}>${t("Reveal clue {n}", { n: c.shown + 1 })}</button>` : allDone ? `<button class="btn primary" data-act="phase" data-p="ripple">${t("Next: the ripple effect")}</button>` : `<span class="hidden-note">${t("Show the read for clue 5 to close the case.")}</span>`}
   </div>`;
 }
 
 function vRipple() {
   const r = S.connect.ripple;
   if (solo()) return `${head("connect", "Sam's burnout doesn't stay with Sam. List every way it could affect colleagues, patients and the organisation. Then reveal the ripple map and give yourself a point for each impact you named.")}
-  ${note("ripple", "Who else is affected, and how?", 140)}
-  ${S.connect.allShown ? `<div class="impacts">${IMPACTS.map((x, k) => `<div class="impact"><span class="txt">${h(x)}</span><button class="toggle" data-act="ripple" data-k="${k}" data-t="0" ${pressed((r[k] || []).includes(0))}>I named this <span class="pts">+1</span></button></div>`).join("")}</div>` : ""}
+  ${note("ripple", t("Who else is affected, and how?"), 140)}
+  ${S.connect.allShown ? `<div class="impacts">${IMPACTS.map((x, k) => `<div class="impact"><span class="txt">${h(x)}</span><button class="toggle" data-act="ripple" data-k="${k}" data-t="0" ${pressed((r[k] || []).includes(0))}>${t("I named this")} <span class="pts">+1</span></button></div>`).join("")}</div>` : ""}
   <div class="nav">
-    <button class="btn" data-act="phase" data-p="case">Back to the case file</button>
-    ${S.connect.allShown ? `<button class="btn primary" data-act="complete" data-s="connect">Complete Connect and collect the key</button>` : `<button class="btn primary" data-act="revealImpacts">Reveal the ripple map</button>`}
+    <button class="btn" data-act="phase" data-p="case">${t("Back to the case file")}</button>
+    ${S.connect.allShown ? `<button class="btn primary" data-act="complete" data-s="connect">${t("Complete Connect and collect the key")}</button>` : `<button class="btn primary" data-act="revealImpacts">${t("Reveal the ripple map")}</button>`}
   </div>`;
   return `${head("connect", "Sam's burnout doesn't stay with Sam. Teams call out who else is affected and how. When a team names an impact on the map, give that team the point.")}
-  <div class="impacts">${IMPACTS.map((x, k) => { const got = r[k] || []; return `<div class="impact"><span class="txt">${got.length || S.connect.allShown ? h(x) : `<span class="hidden-note">Impact ${k + 1}: not named yet</span>`}</span><div class="row">${S.teams.map((n, t) => `<button class="toggle" data-act="ripple" data-k="${k}" data-t="${t}" ${pressed(got.includes(t))}>${h(n)} <span class="pts">+1</span></button>`).join("")}</div></div>`; }).join("")}</div>
+  <div class="impacts">${IMPACTS.map((x, k) => { const got = r[k] || []; return `<div class="impact"><span class="txt">${got.length || S.connect.allShown ? h(x) : `<span class="hidden-note">${t("Impact {n}: not named yet", { n: k + 1 })}</span>`}</span><div class="row">${S.teams.map((n, ti) => `<button class="toggle" data-act="ripple" data-k="${k}" data-t="${ti}" ${pressed(got.includes(ti))}>${h(n)} <span class="pts">+1</span></button>`).join("")}</div></div>`; }).join("")}</div>
   <div class="nav">
-    <button class="btn" data-act="phase" data-p="case">Back to the case file</button>
-    <div class="row"><button class="btn" data-act="revealImpacts">Show all impacts</button><button class="btn primary" data-act="complete" data-s="connect">Complete Connect and collect the key</button></div>
+    <button class="btn" data-act="phase" data-p="case">${t("Back to the case file")}</button>
+    <div class="row"><button class="btn" data-act="revealImpacts">${t("Show all impacts")}</button><button class="btn primary" data-act="complete" data-s="connect">${t("Complete Connect and collect the key")}</button></div>
   </div>`;
 }
 
@@ -534,123 +816,129 @@ function vRespond() {
   return `${head("respond", solo()
     ? "A colleague is showing signs of burnout. Someone says this to them. Classify it, and if it isn't helpful, write a better version before you reveal the answer."
     : "A colleague is showing signs of burnout. Someone says this to them. Teams race to classify it. Then rewrite anything that isn't helpful.")}
-  <article class="case"><span class="label">Statement ${i + 1} of ${STATEMENTS.length}</span><p class="quote">“${h(st.s)}”</p></article>
-  <section style="display:grid;gap:10px"><span class="label">${solo() ? "Your call" : "Each team's call"}</span>
-    <div class="teams">${S.teams.map((n, t) => {
-      const right = shown && p[t] === st.a;
-      return `<div class="team ${shown ? (right ? "correct" : "miss") : ""}"><div class="tname">${h(n)}${shown ? `<span class="mono">${right ? "+1" : "0"}${rw[t] ? " +2" : ""}</span>` : ""}</div>
-        <div class="row">${CLASSES.map(([k, l]) => `<button class="toggle" data-act="pick" data-t="${t}" data-v="${k}" ${pressed(p[t] === k)}>${l}</button>`).join("")}</div>
-        ${solo() ? note("r" + i, "Your rewrite, if it needs one…", 70) : ""}
-        ${shown && st.a !== "helpful" ? `<button class="toggle" data-act="rewrite" data-t="${t}" ${pressed(rw[t])}>${solo() ? "My rewrite was as good" : "Strong rewrite"} <span class="pts">+2</span></button>` : ""}
+  <article class="case"><span class="label">${t("Statement {n} of {total}", { n: i + 1, total: STATEMENTS.length })}</span><p class="quote">${h(q(st.s))}</p></article>
+  <section style="display:grid;gap:10px"><span class="label">${solo() ? t("Your call") : t("Each team's call")}</span>
+    <div class="teams">${S.teams.map((n, ti) => {
+      const right = shown && p[ti] === st.a;
+      return `<div class="team ${shown ? (right ? "correct" : "miss") : ""}"><div class="tname">${h(n)}${shown ? `<span class="mono">${right ? "+1" : "0"}${rw[ti] ? " +2" : ""}</span>` : ""}</div>
+        <div class="row">${CLASSES.map(([k, l]) => `<button class="toggle" data-act="pick" data-t="${ti}" data-v="${k}" ${pressed(p[ti] === k)}>${l}</button>`).join("")}</div>
+        ${solo() ? note("r" + i, t("Your rewrite, if it needs one…"), 70) : ""}
+        ${shown && st.a !== "helpful" ? `<button class="toggle" data-act="rewrite" data-t="${ti}" ${pressed(rw[ti])}>${solo() ? t("My rewrite was as good") : t("Strong rewrite")} <span class="pts">+2</span></button>` : ""}
       </div>`; }).join("")}</div>
   </section>
   ${shown ? `<section class="reveal">
-    <div class="row"><span class="label">Answer</span><span class="tri ${{ helpful: "green", unhelpful: "amber", harmful: "red" }[st.a]}">${h(CLASSES.find(x => x[0] === st.a)[1])}</span></div>
-    <div class="cols"><div><span class="label">Why</span><p>${h(st.why)}</p></div>
-    ${st.better ? `<div><span class="label">Say this instead</span><p style="font-size:20px">${h(st.better)}</p></div>` : ""}</div>
-  </section>` : `<div class="row"><button class="btn primary" data-act="revealResp" ${solo() && !p[0] ? "disabled" : ""}>Reveal the answer</button><span class="hidden-note">${solo() ? "Make your call first." : "Record each team's call first."}</span></div>`}
+    <div class="row"><span class="label">${t("Answer")}</span><span class="tri ${{ helpful: "green", unhelpful: "amber", harmful: "red" }[st.a]}">${h(CLASSES.find(x => x[0] === st.a)[1])}</span></div>
+    <div class="cols"><div><span class="label">${t("Why")}</span><p>${h(st.why)}</p></div>
+    ${st.better ? `<div><span class="label">${t("Say this instead")}</span><p style="font-size:20px">${h(st.better)}</p></div>` : ""}</div>
+  </section>` : `<div class="row"><button class="btn primary" data-act="revealResp" ${solo() && !p[0] ? "disabled" : ""}>${t("Reveal the answer")}</button><span class="hidden-note">${solo() ? t("Make your call first.") : t("Record each team's call first.")}</span></div>`}
   <div class="nav">
-    <button class="btn" data-act="respondStep" data-d="-1" ${i === 0 ? "disabled" : ""}>Previous statement</button>
-    ${i < STATEMENTS.length - 1 ? `<button class="btn primary" data-act="respondStep" data-d="1">Next statement</button>` : `<button class="btn primary" data-act="complete" data-s="respond">Complete Respond and collect the key</button>`}
+    <button class="btn" data-act="respondStep" data-d="-1" ${i === 0 ? "disabled" : ""}>${t("Previous statement")}</button>
+    ${i < STATEMENTS.length - 1 ? `<button class="btn primary" data-act="respondStep" data-d="1">${t("Next statement")}</button>` : `<button class="btn primary" data-act="complete" data-s="respond">${t("Complete Respond and collect the key")}</button>`}
   </div>`;
 }
 
 function vRestore() {
-  const R = S.restore, t = Math.min(R.tab, S.teams.length - 1), plan = R.plans[t] || {};
+  const R = S.restore, ti = Math.min(R.tab, S.teams.length - 1), plan = R.plans[ti] || {};
   return `${head("restore", solo()
     ? "Build a sustainability plan for your own team. Choose at least one action at each level, then write one commitment with a named owner and a date."
     : "Each team builds a sustainability plan for the team from the mission. Choose at least one action at each level, then write one commitment of your own with a named owner and a date.")}
-  <div class="tabs" role="tablist"${solo() ? " hidden" : ""}>${S.teams.map((n, k) => `<button class="toggle" role="tab" data-act="tab" data-t="${k}" ${pressed(k === t)} aria-selected="${k === t}">${h(n)}</button>`).join("")}</div>
-  <div class="levels">${LEVELS.map(l => `<div class="level"><h3>${h(l.name)}</h3><span style="color:var(--muted);font-size:15px">${h(l.sub)} · <span style="font-family:var(--mono)">+1</span> if covered</span>
-    <div class="opts">${l.opts.map((o, oi) => `<button class="toggle" data-act="plan" data-t="${t}" data-l="${l.id}" data-o="${oi}" ${pressed((plan[l.id] || []).includes(oi))}>${h(o)}</button>`).join("")}</div></div>`).join("")}</div>
-  <label for="own${t}" style="display:grid;gap:6px"><span class="label">Our own commitment: who, what, by when</span>
-    <textarea id="own${t}" data-own="${t}" placeholder="e.g. Charge nurse adds a two-minute “How are we really?” round to the 07:30 huddle, starting Monday, reviewed after 4 weeks.">${h(R.own[t] || "")}</textarea></label>
-  <div class="row"><button class="toggle" data-act="owner" data-t="${t}" ${pressed(R.owner[t])}>Names an owner and a date <span class="pts">+2</span></button></div>
-  <section style="display:grid;gap:10px"><div class="row spread"><span class="label">${solo() ? "Your plan" : "All plans"}</span><span id="copyplans"><button class="btn small" data-act="copy">${solo() ? "Copy my plan" : "Copy all plans"}</button></span></div>
+  <div class="tabs" role="tablist"${solo() ? " hidden" : ""}>${S.teams.map((n, k) => `<button class="toggle" role="tab" data-act="tab" data-t="${k}" ${pressed(k === ti)} aria-selected="${k === ti}">${h(n)}</button>`).join("")}</div>
+  <div class="levels">${LEVELS.map(l => `<div class="level"><h3>${h(l.name)}</h3><span style="color:var(--muted);font-size:15px">${h(l.sub)} · <span style="font-family:var(--mono)">+1</span> ${t("if covered")}</span>
+    <div class="opts">${l.opts.map((o, oi) => `<button class="toggle" data-act="plan" data-t="${ti}" data-l="${l.id}" data-o="${oi}" ${pressed((plan[l.id] || []).includes(oi))}>${h(o)}</button>`).join("")}</div></div>`).join("")}</div>
+  <label for="own${ti}" style="display:grid;gap:6px"><span class="label">${t("Our own commitment: who, what, by when")}</span>
+    <textarea id="own${ti}" data-own="${ti}" placeholder="${h(t("e.g. Charge nurse adds a two-minute “How are we really?” round to the 07:30 huddle, starting Monday, reviewed after 4 weeks."))}">${h(R.own[ti] || "")}</textarea></label>
+  <div class="row"><button class="toggle" data-act="owner" data-t="${ti}" ${pressed(R.owner[ti])}>${t("Names an owner and a date")} <span class="pts">+2</span></button></div>
+  <section style="display:grid;gap:10px"><div class="row spread"><span class="label">${solo() ? t("Your plan") : t("All plans")}</span><span id="copyplans"><button class="btn small" data-act="copy">${solo() ? t("Copy my plan") : t("Copy all plans")}</button></span></div>
     <div class="plans">${S.teams.map((n, k) => planCard(n, k)).join("")}</div></section>
-  <div class="nav"><span></span><button class="btn primary" data-act="complete" data-s="restore">Complete Restore and collect the final key</button></div>`;
+  <div class="nav"><span></span><button class="btn primary" data-act="complete" data-s="restore">${t("Complete Restore and collect the final key")}</button></div>`;
 }
 function planCard(n, k) {
-  const p = S.restore.plans[k] || {};
-  return `<div class="plan"><strong>${h(n)}</strong>${LEVELS.map(l => `<b>${h(l.name)}</b><span>${(p[l.id] || []).length ? (p[l.id] || []).map(o => h(l.opts[o])).join("; ") : '<span class="hidden-note">Nothing yet</span>'}</span>`).join("")}<b>Commitment</b><span>${S.restore.own[k] ? h(S.restore.own[k]) : '<span class="hidden-note">Nothing yet</span>'}</span></div>`;
+  const p = S.restore.plans[k] || {}, none = `<span class="hidden-note">${t("Nothing yet")}</span>`;
+  return `<div class="plan"><strong>${h(n)}</strong>${LEVELS.map(l => `<b>${h(l.name)}</b><span>${(p[l.id] || []).length ? (p[l.id] || []).map(o => h(l.opts[o])).join("; ") : none}</span>`).join("")}<b>${t("Commitment")}</b><span>${S.restore.own[k] ? h(S.restore.own[k]) : none}</span></div>`;
 }
 function plansText() {
   return S.teams.map((n, k) => {
     const p = S.restore.plans[k] || {};
-    return [n.toUpperCase(), ...LEVELS.map(l => `${l.name}: ${(p[l.id] || []).map(o => l.opts[o]).join("; ") || "-"}`), `Commitment: ${S.restore.own[k] || "-"}`].join("\n");
+    return [n.toUpperCase(), ...LEVELS.map(l => `${l.name}: ${(p[l.id] || []).map(o => l.opts[o]).join("; ") || "-"}`), `${t("Commitment")}: ${S.restore.own[k] || "-"}`].join("\n");
   }).join("\n\n");
 }
 
 function vDebrief() {
-  const sc = scores(), order = S.teams.map((n, t) => ({ n, s: sc[t] })).sort((a, b) => b.s - a.s);
+  const sc = scores(), order = S.teams.map((n, i) => ({ n, s: sc[i] })).sort((a, b) => b.s - a.s);
   const got = STAGES.filter(s => S.keys[s.id]).length;
-  return `<div class="stagehead"><span class="label">Mission debrief · ${got} of 4 keys collected</span><h2>${got === 4 ? "Team restored" : "Mission in progress"}</h2></div>
+  return `<div class="stagehead"><span class="label">${t("Mission debrief · {got} of 4 keys collected", { got })}</span><h2>${got === 4 ? t("Team restored") : t("Mission in progress")}</h2></div>
   <div class="keys">${STAGES.map(s => keySvg(S.keys[s.id])).join("")}</div>
-  ${solo() ? `<section style="display:grid;gap:8px"><span class="label">Your score</span><div class="timer">${sc[0]} <span style="font-size:24px;color:var(--muted)">of ${maxScore()}</span></div></section>` : `<section style="display:grid;gap:8px"><span class="label">Final standings</span>
+  ${solo() ? `<section style="display:grid;gap:8px"><span class="label">${t("Your score")}</span><div class="timer">${sc[0]} <span style="font-size:24px;color:var(--muted)">${t("of {max}", { max: maxScore() })}</span></div></section>` : `<section style="display:grid;gap:8px"><span class="label">${t("Final standings")}</span>
     ${order.map((o, k) => `<div class="score${k === 0 ? " lead" : ""}"><span class="nm">${k + 1}. ${h(o.n)}</span><span></span><span class="pts">${o.s}</span></div>`).join("")}
   </section>`}
-  <section style="display:grid;gap:10px"><span class="label">Take these back to your ward</span>
+  <section style="display:grid;gap:10px"><span class="label">${t("Take these back to your ward")}</span>
   <ul class="msgs">
-    <li>Silent burnout hides behind good performance.</li>
-    <li>Look for change from someone's own normal, and for patterns rather than single signs.</li>
-    <li>You don't need a diagnosis to start a caring conversation.</li>
-    <li>Burnout is a team and system issue, not a personal failing.</li>
+    <li>${t("Silent burnout hides behind good performance.")}</li>
+    <li>${t("Look for change from someone's own normal, and for patterns rather than single signs.")}</li>
+    <li>${t("You don't need a diagnosis to start a caring conversation.")}</li>
+    <li>${t("Burnout is a team and system issue, not a personal failing.")}</li>
   </ul></section>
-  <div class="signal"><p>You weren't looking for a diagnosis. You were looking for a signal.</p></div>`;
+  <div class="signal"><p>${t("You weren't looking for a diagnosis. You were looking for a signal.")}</p></div>`;
 }
 
 function vTrack() {
-  const cur = S.stage;
-  return [`<li><button data-act="go" data-s="brief" ${cur === "brief" ? 'aria-current="step"' : ""}>Brief</button></li>`]
-    .concat(STAGES.map(s => `<li class="arrow" aria-hidden="true">→</li><li><button data-act="go" data-s="${s.id}" ${cur === s.id ? 'aria-current="step"' : ""}>${keySvg(S.keys[s.id])}${h(s.name)}</button></li>`))
-    .concat([`<li class="arrow" aria-hidden="true">→</li><li><button data-act="go" data-s="debrief" ${cur === "debrief" ? 'aria-current="step"' : ""}>Debrief</button></li>`]).join("");
+  const cur = S.stage, arrow = `<li class="arrow" aria-hidden="true">${t("→")}</li>`;
+  return [`<li><button data-act="go" data-s="brief" ${cur === "brief" ? 'aria-current="step"' : ""}>${t("Brief")}</button></li>`]
+    .concat(STAGES.map(s => `${arrow}<li><button data-act="go" data-s="${s.id}" ${cur === s.id ? 'aria-current="step"' : ""}>${keySvg(S.keys[s.id])}${h(s.name)}</button></li>`))
+    .concat([`${arrow}<li><button data-act="go" data-s="debrief" ${cur === "debrief" ? 'aria-current="step"' : ""}>${t("Debrief")}</button></li>`]).join("");
 }
 
 function vBoard() {
   const sc = scores(), max = Math.max(...sc);
   const got = STAGES.filter(s => S.keys[s.id]).length;
-  if (solo()) return `<div class="panel"><span class="label">${h(S.teams[0])}'s score</span><div class="timer">${sc[0]} <span style="font-size:20px;color:var(--muted)">of ${maxScore()}</span></div></div>
+  if (solo()) return `<div class="panel"><span class="label">${S.teams[0] === defaults().PLAYER ? t("Your score") : h(t("{name}'s score", { name: S.teams[0] }))}</span><div class="timer">${sc[0]} <span style="font-size:20px;color:var(--muted)">${t("of {max}", { max: maxScore() })}</span></div></div>
   ${timerPanel()}${keysPanel(got)}`;
-  return `<div class="panel"><span class="label">Scoreboard</span>
-    <div>${S.teams.map((n, t) => `<div class="score${max > 0 && sc[t] === max ? " lead" : ""}"><span class="nm">${h(n)}</span>
-      <span class="adj"><button data-act="adj" data-t="${t}" data-d="-1" aria-label="Take a point from ${h(n)}">−</button><button data-act="adj" data-t="${t}" data-d="1" aria-label="Give ${h(n)} a bonus point">+</button></span>
-      <span class="pts">${sc[t]}</span></div>`).join("")}</div>
+  return `<div class="panel"><span class="label">${t("Scoreboard")}</span>
+    <div>${S.teams.map((n, i) => `<div class="score${max > 0 && sc[i] === max ? " lead" : ""}"><span class="nm">${h(n)}</span>
+      <span class="adj"><button data-act="adj" data-t="${i}" data-d="-1" aria-label="${h(t("Take a point from {name}", { name: n }))}">−</button><button data-act="adj" data-t="${i}" data-d="1" aria-label="${h(t("Give {name} a bonus point", { name: n }))}">+</button></span>
+      <span class="pts">${sc[i]}</span></div>`).join("")}</div>
   </div>
   ${timerPanel()}${keysPanel(got)}`;
 }
 function timerPanel() {
-  return `<div class="panel"><span class="label">Round timer</span>
-    <div class="timer${timer.left <= 10 && timer.left > 0 ? " low" : ""}" id="timer">${fmt(timer.left)}</div>
-    <div class="row"><button class="btn small" data-act="timerToggle">${timer.running ? "Pause" : timer.left === 0 ? "Restart" : "Start"}</button><button class="btn small" data-act="timerReset">Reset</button></div>
+  return `<div class="panel"><span class="label">${t("Round timer")}</span>
+    <div class="timer${timer.left <= 10 && timer.left > 0 ? " low" : ""}" id="timer" dir="ltr">${fmt(timer.left)}</div>
+    <div class="row"><button class="btn small" data-act="timerToggle">${timer.running ? t("Pause") : timer.left === 0 ? t("Restart") : t("Start")}</button><button class="btn small" data-act="timerReset">${t("Reset")}</button></div>
   </div>`;
 }
 function keysPanel(got) {
-  return `<div class="panel"><span class="label">Sustainability keys · ${got} of 4</span><div class="keys">${STAGES.map(s => keySvg(S.keys[s.id])).join("")}</div></div>`;
+  return `<div class="panel"><span class="label">${t("Sustainability keys · {got} of 4", { got })}</span><div class="keys">${STAGES.map(s => keySvg(S.keys[s.id])).join("")}</div></div>`;
 }
 
 function vModal() {
   if (!modal) return "";
   const st = STAGES[stageIdx(modal)], n = stageIdx(modal) + 1, next = STAGES[n];
   return `<div class="overlay" role="dialog" aria-modal="true" aria-labelledby="mh"><div class="modal">
-    ${keySvg(true)}<span class="label">Sustainability key ${n} of 4</span><h3 id="mh">${h(st.name)} unlocked</h3>
-    <p>${h(st.goal)}: done.</p>
-    <button class="btn primary" data-act="closeModal">${next ? `Continue to ${h(next.name)}` : "Go to the mission debrief"}</button>
+    ${keySvg(true)}<span class="label">${t("Sustainability key {n} of 4", { n })}</span><h3 id="mh">${h(t("{name} unlocked", { name: st.name }))}</h3>
+    <p>${h(t("{goal}: done.", { goal: st.goal }))}</p>
+    <button class="btn primary" data-act="closeModal">${next ? h(t("Continue to {name}", { name: next.name })) : t("Go to the mission debrief")}</button>
   </div></div>`;
 }
 
 /* ---------- Render ---------- */
 const VIEWS = { brief: vBrief, detect: vDetect, connect: vConnect, respond: vRespond, restore: vRestore, debrief: vDebrief };
 function render() {
+  applyLang();
+  document.getElementById("brandname").textContent = t("Team Rescue Mission");
+  document.getElementById("brandsub").textContent = t("Silent Burnout in Healthcare Teams");
+  const lb = document.getElementById("langbtn");
+  lb.textContent = ar() ? "English" : "العربية";
+  lb.lang = ar() ? "en" : "ar";
   document.getElementById("track").innerHTML = vTrack();
   document.getElementById("main").innerHTML = VIEWS[S.stage]();
   document.getElementById("board").innerHTML = vBoard();
   document.getElementById("overlay").innerHTML = vModal();
   document.getElementById("footnote").textContent = solo()
-    ? "Solo mode. Each answer stays hidden until you make your own call."
-    : "Facilitator view. Answers stay hidden until you press Reveal, so this screen is safe to project.";
+    ? t("Solo mode. Each answer stays hidden until you make your own call.")
+    : t("Facilitator view. Answers stay hidden until you press Reveal, so this screen is safe to project.");
   document.getElementById("resetbox").innerHTML = resetAsk
-    ? `<span class="row"><span>Clear all scores and answers?</span><button class="btn small" data-act="resetYes">Reset</button><button class="btn small" data-act="resetNo">Cancel</button></span>`
-    : `<button class="btn small" data-act="resetAsk">Reset game</button>`;
+    ? `<span class="row"><span>${t("Clear all scores and answers?")}</span><button class="btn small" data-act="resetYes">${t("Reset")}</button><button class="btn small" data-act="resetNo">${t("Cancel")}</button></span>`
+    : `<button class="btn small" data-act="resetAsk">${t("Reset game")}</button>`;
   if (S.stage === "brief") startEcg(); else stopEcg();
   save();
 }
@@ -667,12 +955,23 @@ function tick() {
 
 /* ---------- Actions ---------- */
 const nest = (o, a, b) => ((o[a] = o[a] || {}), (o[a][b] = o[a][b] || {}), o[a][b]);
+const defaults = () => (ar() ? AR : EN);
 const ACT = {
   go: e => { S.stage = e.s; window.scrollTo(0, 0); },
+  lang: () => {
+    // Swap untouched default names into the new language; keep names people typed.
+    const from = defaults();
+    S.lang = ar() ? "en" : "ar";
+    const to = defaults();
+    const swap = n => { const k = from.TEAMS.indexOf(n); return k >= 0 ? to.TEAMS[k] : n === from.PLAYER ? to.PLAYER : n; };
+    S.teams = S.teams.map(swap);
+    if (S.teamNames) S.teamNames = S.teamNames.map(swap);
+    if (S.player) S.player = swap(S.player);
+  },
   teamsCount: e => {
-    const n = +e.n, names = ["Team Triage", "Team Pulse", "Team Handover", "Team Rounds"];
-    S.teams = Array.from({ length: n }, (_, t) => S.teams[t] || names[t]);
-    S.adj = Array.from({ length: n }, (_, t) => S.adj[t] || 0);
+    const n = +e.n, names = defaults().TEAMS;
+    S.teams = Array.from({ length: n }, (_, i) => S.teams[i] || names[i]);
+    S.adj = Array.from({ length: n }, (_, i) => S.adj[i] || 0);
   },
   timerDur: e => { S.timerDur = +e.n; if (!timer.running) timer.left = S.timerDur; },
   reveal: () => { S.detect.revealed[S.detect.i] = true; },
@@ -680,9 +979,9 @@ const ACT = {
   mode: e => {
     if (S.mode === e.m) return;
     // Switching modes starts a fresh game, but remembers names typed for either mode.
-    const teamNames = solo() ? S.teamNames : S.teams.slice(), player = solo() ? S.teams[0] : (S.player || "You");
-    const dur = S.timerDur;
-    S = fresh(teamNames ? teamNames.length : 3);
+    const teamNames = solo() ? S.teamNames : S.teams.slice(), player = solo() ? S.teams[0] : (S.player || defaults().PLAYER);
+    const dur = S.timerDur, lang = S.lang;
+    S = fresh(teamNames ? teamNames.length : 3, lang);
     Object.assign(S, { mode: e.m, teamNames, player, timerDur: dur });
     if (e.m === "solo") { S.teams = [player]; S.adj = [0]; } else if (teamNames) S.teams = teamNames.slice();
   },
@@ -692,7 +991,7 @@ const ACT = {
   recShow: e => { S.connect.recShown[e.c] = true; },
   nextClue: () => { S.connect.shown = Math.min(CASE.clues.length, S.connect.shown + 1); resetTimer(); },
   phase: e => { S.connect.phase = e.p; window.scrollTo(0, 0); },
-  ripple: e => { const k = e.k, t = +e.t, a = (S.connect.ripple[k] = S.connect.ripple[k] || []); const at = a.indexOf(t); at >= 0 ? a.splice(at, 1) : a.push(t); },
+  ripple: e => { const k = e.k, ti = +e.t, a = (S.connect.ripple[k] = S.connect.ripple[k] || []); const at = a.indexOf(ti); at >= 0 ? a.splice(at, 1) : a.push(ti); },
   revealImpacts: () => { S.connect.allShown = true; },
   pick: e => { const p = (S.respond.picks[S.respond.i] = S.respond.picks[S.respond.i] || {}); p[e.t] = p[e.t] === e.v ? undefined : e.v; },
   revealResp: () => { S.respond.revealed[S.respond.i] = true; },
@@ -704,7 +1003,7 @@ const ACT = {
   copy: () => {
     const box = document.getElementById("copyplans"), done = msg => { if (box) box.innerHTML = `<span class="label">${msg}</span>`; };
     const fallback = () => { const ta = document.createElement("textarea"); ta.value = plansText(); ta.style.height = "200px"; box.replaceWith(ta); ta.select(); };
-    try { navigator.clipboard.writeText(plansText()).then(() => done("Copied"), fallback); } catch (err) { fallback(); }
+    try { navigator.clipboard.writeText(plansText()).then(() => done(t("Copied")), fallback); } catch (err) { fallback(); }
     return "noRender";
   },
   complete: e => { S.keys[e.s] = true; modal = e.s; },
@@ -719,8 +1018,8 @@ const ACT = {
   resetAsk: () => { resetAsk = true; },
   resetNo: () => { resetAsk = false; },
   resetYes: () => {
-    const keep = { mode: S.mode, teams: S.teams.slice(), teamNames: S.teamNames, player: S.player, timerDur: S.timerDur };
-    S = Object.assign(fresh(S.teams.length), keep, { adj: keep.teams.map(() => 0) });
+    const keep = { lang: S.lang, mode: S.mode, teams: S.teams.slice(), teamNames: S.teamNames, player: S.player, timerDur: S.timerDur };
+    S = Object.assign(fresh(S.teams.length, S.lang), keep, { adj: keep.teams.map(() => 0) });
     resetAsk = false; modal = null; resetTimer();
   }
 };
@@ -732,14 +1031,14 @@ document.addEventListener("click", ev => {
   if (fn(el.dataset) !== "noRender") render();
 });
 document.addEventListener("change", ev => {
-  const t = ev.target;
-  if (t.dataset.team !== undefined) { S.teams[+t.dataset.team] = t.value.trim() || (solo() ? "You" : `Team ${+t.dataset.team + 1}`); render(); }
+  const el = ev.target;
+  if (el.dataset.team !== undefined) { S.teams[+el.dataset.team] = el.value.trim() || (solo() ? defaults().PLAYER : t("Team {n}", { n: +el.dataset.team + 1 })); render(); }
 });
 document.addEventListener("input", ev => {
-  const t = ev.target;
-  if (t.dataset.note !== undefined) { S.notes[t.dataset.note] = t.value; save(); return; }
-  if (t.dataset.own !== undefined) {
-    S.restore.own[+t.dataset.own] = t.value; save();
+  const el = ev.target;
+  if (el.dataset.note !== undefined) { S.notes[el.dataset.note] = el.value; save(); return; }
+  if (el.dataset.own !== undefined) {
+    S.restore.own[+el.dataset.own] = el.value; save();
     const plans = document.querySelector(".plans"); if (plans) plans.innerHTML = S.teams.map((n, k) => planCard(n, k)).join("");
   }
 });
@@ -786,8 +1085,11 @@ function startEcg() {
 /* ---------- Boot ---------- */
 function start(data) {
   const saved = (data && data.state) || load();
-  if (saved) S = Object.assign(fresh(saved.teams.length), saved);
-  S.notes = S.notes || {}; S.detect.pick = S.detect.pick || {};
+  if (saved) S = Object.assign(fresh(saved.teams.length, saved.lang), saved);
+  S.notes = S.notes || {}; S.detect.pick = S.detect.pick || {}; S.lang = S.lang || "en";
+  // A link ending in #ar or #en opens the game in that language.
+  const want = location.hash.slice(1);
+  if ((want === "ar" || want === "en") && want !== S.lang) ACT.lang();
   timer.left = S.timerDur;
   render();
 }
